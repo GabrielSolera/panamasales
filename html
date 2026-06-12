@@ -1,0 +1,2442 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Oakberry Panamá</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Bitter:wght@400;600;700;900&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --purple:     #4A1F60;
+  --purple2:    #5C2875;
+  --purple3:    #3A1550;
+  --offwhite:   #F5EEE0;
+  --granola:    #EAA55E;
+  --strawberry: #FF4B5F;
+  --matcha:     #46C3AF;
+  --blueberry:  #5B94B7;
+  --text:       #1A0A24;
+  --muted:      #7A6080;
+  --muted2:     #B0A0C0;
+  --surface:    #FFFFFF;
+  --border:     rgba(74,31,96,.10);
+  --border2:    rgba(74,31,96,.18);
+  --font:       'DM Sans', sans-serif;
+  --display:    'Bitter', Georgia, serif;
+  --radius:     14px;
+  --sidebar-w:  220px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;font-family:var(--font);background:var(--offwhite);color:var(--text);overflow:hidden;}
+canvas{color:var(--muted);}
+
+
+#loginScreen {
+  position:fixed;inset:0;z-index:10000;
+  background:var(--purple3);
+  display:flex;align-items:center;justify-content:center;
+}
+#loginScreen.hidden{display:none;}
+.login-wrap{width:100%;max-width:360px;padding:0 20px;animation:fadeUp .35s ease;}
+.login-logo{text-align:center;margin-bottom:28px;}
+.login-logo-text{font-family:var(--display);font-size:24px;font-weight:900;color:var(--offwhite);letter-spacing:.04em;}
+.login-logo-sub{font-size:10px;color:rgba(245,238,224,.4);letter-spacing:.18em;text-transform:uppercase;margin-top:4px;}
+.login-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:28px 24px;backdrop-filter:blur(10px);}
+.login-title{font-family:var(--display);font-size:20px;font-weight:700;color:var(--offwhite);margin-bottom:4px;}
+.login-sub{font-size:11px;color:rgba(245,238,224,.5);margin-bottom:22px;}
+.login-field{margin-bottom:14px;}
+.login-label{display:block;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(245,238,224,.5);margin-bottom:5px;}
+.login-input{width:100%;font-family:var(--font);font-size:13px;font-weight:500;background:rgba(255,255,255,.08);color:var(--offwhite);border:1px solid rgba(255,255,255,.15);padding:10px 14px;border-radius:10px;outline:none;transition:border-color .15s;}
+.login-input:focus{border-color:var(--granola);}
+.login-input::placeholder{color:rgba(245,238,224,.3);}
+.login-btn{width:100%;margin-top:6px;font-family:var(--font);font-size:13px;font-weight:700;padding:11px;border-radius:10px;border:none;cursor:pointer;background:var(--granola);color:var(--purple3);transition:all .18s;letter-spacing:.02em;}
+.login-btn:hover{background:#f5b870;box-shadow:0 0 20px rgba(234,165,94,.3);}
+.login-btn:disabled{opacity:.5;cursor:not-allowed;}
+.login-error{margin-top:12px;padding:9px 12px;background:rgba(255,75,95,.15);border:1px solid rgba(255,75,95,.3);border-radius:8px;font-size:11px;color:#ff8090;display:none;}
+.login-error.visible{display:block;}
+.login-footer{text-align:center;margin-top:18px;font-size:10px;color:rgba(245,238,224,.3);}
+
+
+.shell{display:flex;height:100vh;}
+
+
+.sidebar{
+  width:var(--sidebar-w);flex-shrink:0;
+  background:var(--purple);
+  display:flex;flex-direction:column;
+  overflow:hidden;position:relative;z-index:50;
+}
+.sidebar::after{
+  content:'';position:absolute;bottom:-80px;right:-60px;
+  width:200px;height:200px;border-radius:50%;
+  background:rgba(255,255,255,.03);pointer-events:none;
+}
+.sidebar-logo{padding:22px 18px 18px;border-bottom:1px solid rgba(255,255,255,.07);}
+.logo-berry{font-size:20px;margin-bottom:2px;}
+.logo-name{font-family:var(--display);font-size:15px;font-weight:700;color:#fff;letter-spacing:.02em;}
+.logo-sub{font-size:9px;color:rgba(255,255,255,.4);letter-spacing:.14em;text-transform:uppercase;margin-top:2px;}
+.sidebar-nav{padding:10px 0;flex:1;overflow-y:auto;}
+.nav-section-label{padding:16px 18px 5px;font-size:8px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.25);}
+.nav-item{
+  display:flex;align-items:center;gap:9px;
+  padding:9px 18px;cursor:pointer;
+  font-size:12.5px;font-weight:500;color:rgba(255,255,255,.55);
+  transition:all .14s;position:relative;
+}
+.nav-item:hover{color:#fff;background:rgba(255,255,255,.06);}
+.nav-item.active{color:#fff;background:rgba(255,255,255,.09);}
+.nav-item.active::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--granola);border-radius:0 3px 3px 0;}
+.nav-icon{width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.07);border-radius:8px;font-size:13px;flex-shrink:0;transition:background .14s;}
+.nav-item.active .nav-icon{background:rgba(234,165,94,.18);}
+.nav-item:hover .nav-icon{background:rgba(255,255,255,.1);}
+.sidebar-footer{padding:12px 14px 16px;border-top:1px solid rgba(255,255,255,.07);}
+.user-chip{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.07);border-radius:10px;padding:8px 10px;cursor:pointer;transition:background .14s;}
+.user-chip:hover{background:rgba(255,255,255,.1);}
+.user-avatar{width:28px;height:28px;border-radius:50%;background:var(--granola);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--purple);flex-shrink:0;}
+.user-name{font-size:11px;font-weight:600;color:#fff;}
+.user-role{font-size:9px;color:rgba(255,255,255,.35);}
+
+
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.topbar{
+  background:var(--surface);border-bottom:1px solid var(--border);
+  padding:0 24px;height:54px;
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+}
+.topbar-title{font-family:var(--display);font-size:16px;font-weight:700;color:var(--text);}
+.topbar-sub{font-size:10px;color:var(--muted);margin-top:1px;}
+.topbar-right{display:flex;align-items:center;gap:8px;}
+.ctrl-pill{
+  display:flex;align-items:center;gap:5px;
+  background:var(--offwhite);border:1px solid var(--border2);
+  border-radius:20px;padding:5px 12px;
+  font-size:11px;font-weight:600;color:var(--text);cursor:pointer;
+  transition:all .14s;
+}
+.ctrl-pill:hover{border-color:var(--purple);}
+.ctrl-pill.active{background:var(--purple);color:#fff;border-color:var(--purple);}
+.ctrl-input{
+  font-family:var(--font);font-size:11px;font-weight:500;
+  background:var(--offwhite);border:1px solid var(--border2);
+  border-radius:20px;padding:5px 12px;color:var(--text);outline:none;
+  transition:border-color .14s;
+}
+.ctrl-input:hover,.ctrl-input:focus{border-color:var(--purple);}
+.btn-refresh{
+  width:32px;height:32px;border-radius:50%;
+  background:var(--purple);border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-size:14px;transition:transform .35s,background .15s;
+}
+.btn-refresh:hover{background:var(--purple2);transform:rotate(180deg);}
+
+
+.content{flex:1;overflow-y:auto;padding:20px 24px;}
+.content::-webkit-scrollbar{width:4px;}
+.content::-webkit-scrollbar-thumb{background:rgba(74,31,96,.15);border-radius:2px;}
+
+
+.global-loader{position:fixed;inset:0;background:rgba(245,238,224,.85);display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;z-index:9000;backdrop-filter:blur(4px);}
+.global-loader.visible{display:flex;}
+.loader-ring{width:40px;height:40px;border:3px solid rgba(74,31,96,.15);border-top-color:var(--purple);border-radius:50%;animation:spin .7s linear infinite;}
+.loader-txt{font-size:13px;font-weight:600;color:var(--purple);}
+@keyframes spin{to{transform:rotate(360deg);}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;}
+.kpi-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px;}
+.kpi{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:16px;
+  position:relative;overflow:hidden;
+  transition:transform .15s,box-shadow .15s;
+}
+.kpi:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(74,31,96,.08);}
+.kpi-bar{position:absolute;top:0;left:0;right:0;height:3px;}
+.kpi-label{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:8px;margin-top:6px;}
+.kpi-value{font-family:var(--display);font-size:26px;font-weight:700;color:var(--text);line-height:1;}
+.kpi-sub{font-size:10px;color:var(--muted);margin-top:5px;}
+.kpi-delta{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;margin-top:6px;}
+.d-pos{background:rgba(70,195,175,.1);color:#2a9d8f;}
+.d-neg{background:rgba(255,75,95,.08);color:var(--strawberry);}
+.d-neu{background:rgba(74,31,96,.07);color:var(--muted);}
+
+
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.card-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);}
+.card-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);}
+.card-tag{font-size:9.5px;font-weight:600;background:var(--offwhite);color:var(--muted);padding:2px 9px;border-radius:20px;}
+.card-body{padding:16px;}
+.chart-wrap{position:relative;height:200px;}
+.chart-wrap-sm{position:relative;height:155px;}
+.chart-wrap-lg{position:relative;height:240px;}
+.section{animation:fadeUp .22s ease;}
+
+
+.bar-list{display:flex;flex-direction:column;gap:8px;}
+.bar-item{display:flex;align-items:center;gap:10px;}
+.bar-rank{width:20px;font-size:10px;font-weight:700;color:var(--muted);text-align:center;flex-shrink:0;}
+.bar-name{flex:1;font-size:11.5px;font-weight:600;color:var(--text);}
+.bar-track{flex:2;height:5px;background:var(--offwhite);border-radius:3px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:3px;transition:width .8s ease;}
+.bar-qty{font-size:11px;font-weight:700;width:50px;text-align:right;font-family:monospace;}
+.bar-pct{font-size:10px;color:var(--muted);width:36px;text-align:right;}
+
+
+.canal-grid{display:flex;border-bottom:1px solid var(--border);}
+.canal-cell{flex:1;padding:14px 12px;text-align:center;border-right:1px solid var(--border);}
+.canal-cell:last-child{border-right:none;}
+.canal-dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:4px;}
+.canal-name{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);display:flex;align-items:center;justify-content:center;margin-bottom:5px;}
+.canal-value{font-family:var(--display);font-size:20px;font-weight:700;color:var(--text);}
+.canal-pct{font-size:10px;color:var(--muted);margin-top:2px;}
+
+
+.data-table{width:100%;border-collapse:collapse;font-size:11.5px;}
+.data-table thead th{padding:8px 12px;text-align:right;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);border-bottom:1px solid var(--border);background:var(--offwhite);}
+.data-table thead th:first-child{text-align:left;}
+.data-table tbody tr{border-bottom:1px solid rgba(74,31,96,.05);transition:background .1s;}
+.data-table tbody tr:hover{background:rgba(74,31,96,.03);}
+.data-table tbody td{padding:8px 12px;text-align:right;}
+.data-table tbody td:first-child{text-align:left;font-weight:600;}
+.data-table tfoot td{padding:9px 12px;text-align:right;font-weight:700;border-top:1px solid var(--border);background:rgba(74,31,96,.04);}
+.data-table tfoot td:first-child{text-align:left;color:var(--purple);}
+
+
+.insight{background:linear-gradient(135deg,rgba(74,31,96,.05),rgba(234,165,94,.07));border:1px solid rgba(74,31,96,.1);border-radius:12px;padding:13px 15px;margin-top:12px;}
+.insight-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--granola);margin-bottom:4px;}
+.insight-txt{font-size:11.5px;color:var(--text);line-height:1.55;}
+
+
+.modal-bg{position:fixed;inset:0;background:rgba(26,10,36,.7);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:8000;}
+.modal-bg.open{display:flex;}
+.modal-box{background:var(--surface);border-radius:16px;padding:26px;width:100%;max-width:460px;animation:fadeUp .2s ease;}
+.modal-title{font-family:var(--display);font-size:16px;font-weight:700;margin-bottom:4px;}
+.modal-sub{font-size:11px;color:var(--muted);margin-bottom:20px;}
+.field-label{display:block;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin-bottom:5px;}
+.field-input{width:100%;font-family:var(--font);font-size:14px;font-weight:600;background:var(--offwhite);color:var(--text);border:1px solid var(--border2);padding:10px 13px;border-radius:10px;outline:none;transition:border-color .15s;margin-bottom:14px;}
+.field-input:focus{border-color:var(--purple);}
+.field-select{width:100%;font-family:var(--font);font-size:13px;font-weight:500;background:var(--offwhite);color:var(--text);border:1px solid var(--border2);padding:9px 13px;border-radius:10px;outline:none;margin-bottom:14px;}
+.btn-primary{font-family:var(--font);font-size:12px;font-weight:700;padding:9px 20px;border-radius:9px;border:none;cursor:pointer;background:var(--purple);color:#fff;transition:all .15s;}
+.btn-primary:hover{background:var(--purple2);}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed;}
+.btn-ghost{font-family:var(--font);font-size:12px;font-weight:600;padding:9px 16px;border-radius:9px;border:1px solid var(--border2);cursor:pointer;background:transparent;color:var(--muted);transition:all .15s;}
+.btn-ghost:hover{border-color:var(--purple);color:var(--text);}
+.dist-preview{max-height:200px;overflow-y:auto;background:var(--offwhite);border-radius:10px;padding:10px;font-size:11px;font-family:monospace;margin:12px 0;}
+.dist-row{display:flex;justify-content:space-between;padding:2px 4px;border-bottom:1px solid rgba(74,31,96,.06);}
+.dist-row:last-child{border-bottom:none;}
+.dist-fecha{color:var(--muted);}
+.dist-monto{font-weight:700;color:var(--purple);}
+
+
+
+.topbar { height: auto; padding: 10px 24px; flex-wrap: wrap; gap: 8px; }
+.topbar-left { flex-shrink: 0; }
+.topbar-controls { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.ctrl-sep { width:1px; height:20px; background:var(--border2); }
+.ctrl-select {
+  font-family:var(--font); font-size:11px; font-weight:500;
+  background:var(--offwhite); border:1px solid var(--border2);
+  border-radius:20px; padding:5px 12px; color:var(--text); outline:none;
+  transition:border-color .14s; cursor:pointer;
+}
+.ctrl-select:hover,.ctrl-select:focus { border-color:var(--purple); }
+
+
+.period-tabs { display:flex; gap:3px; background:var(--offwhite); border:1px solid var(--border2); border-radius:20px; padding:3px; }
+.period-tab { font-family:var(--font); font-size:10.5px; font-weight:600; padding:4px 12px; border-radius:16px; border:none; cursor:pointer; color:var(--muted); background:transparent; transition:all .14s; }
+.period-tab.active { background:var(--purple); color:#fff; }
+.period-tab:hover:not(.active) { color:var(--text); }
+
+
+.canal-filters { display:flex; gap:5px; flex-wrap:wrap; margin-bottom:14px; }
+.canal-pill { font-family:var(--font); font-size:10.5px; font-weight:600; padding:5px 13px; border-radius:20px; border:1.5px solid var(--border2); cursor:pointer; color:var(--muted); background:transparent; transition:all .14s; display:flex; align-items:center; gap:5px; }
+.canal-pill:hover { border-color:var(--purple); color:var(--text); }
+.canal-pill.active { color:#fff; border-color:transparent; }
+.canal-dot-sm { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+
+
+@media(max-width:900px){
+  .kpi-grid{grid-template-columns:1fr 1fr;}
+  .grid-2,.grid-3{grid-template-columns:1fr;}
+  :root{--sidebar-w:0px;}
+  .sidebar{display:none;}
+}
+</style>
+<script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-wrap">
+    <div class="login-logo">
+      <div style="font-size:36px;margin-bottom:8px">🫐</div>
+      <div class="login-logo-text">OAKBERRY</div>
+      <div class="login-logo-sub">Panamá · Dashboard</div>
+    </div>
+    <div class="login-card">
+      <div class="login-title">Bienvenido</div>
+      <div class="login-sub">Ingresá tus credenciales para continuar</div>
+      <div class="login-field">
+        <label class="login-label">Usuario</label>
+        <input class="login-input" id="loginUser" type="text" placeholder="tu.usuario" autocomplete="username" autocapitalize="off">
+      </div>
+      <div class="login-field">
+        <label class="login-label">Contraseña</label>
+        <input class="login-input" id="loginPass" type="password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button class="login-btn" id="loginBtn" onclick="doLogin()">
+        <span id="loginBtnTxt">Ingresar</span>
+      </button>
+      <div class="login-error" id="loginError"></div>
+    </div>
+    <div class="login-footer">Oakberry Latam · Sistema interno · v1.0</div>
+  </div>
+</div>
+
+<!-- LOADER -->
+<div class="global-loader" id="globalLoader">
+  <div class="loader-ring"></div>
+  <div class="loader-txt" id="loaderTxt">Cargando...</div>
+</div>
+
+<!-- MODAL BUDGET -->
+<div class="modal-bg" id="budgetModal">
+  <div class="modal-box">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px">
+      <div>
+        <div class="modal-title">⚙ Configurar Budget</div>
+        <div class="modal-sub">Ingresá el monto mensual y el sistema lo distribuye por día</div>
+      </div>
+      <button onclick="closeBudgetModal()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--muted)">✕</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div>
+        <label class="field-label">Mes a presupuestar</label>
+        <select class="field-select" id="budgetMes"></select>
+      </div>
+      <div>
+        <label class="field-label">Total mensual (USD)</label>
+        <input class="field-input" id="budgetTotal" type="number" placeholder="0.00" min="0" step="0.01" oninput="previewBudget()">
+      </div>
+    </div>
+    <div id="budgetDistWrap" style="display:none">
+      <label class="field-label">Distribución diaria (preview)</label>
+      <div class="dist-preview" id="budgetDistPreview"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn-primary" id="budgetSaveBtn" onclick="saveBudget()" disabled>💾 Guardar</button>
+      <button class="btn-ghost" onclick="closeBudgetModal()">Cancelar</button>
+    </div>
+    <div id="budgetMsg" style="margin-top:10px;font-size:11px;text-align:center;display:none"></div>
+  </div>
+</div>
+
+<!-- APP SHELL -->
+<div class="shell" id="appShell" style="display:none">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-logo" style="padding:18px 16px 14px">
+      <div style="font-family:'Bitter',serif;font-size:18px;font-weight:900;color:#fff;letter-spacing:.04em;margin-bottom:3px">OAKBERRY</div>
+      <div class="logo-sub" style="padding-left:1px">Panamá · Dashboard</div>
+    </div>
+    <div class="sidebar-nav">
+      <div class="nav-section-label">Principal</div>
+      <div class="nav-item active" data-section="diario">
+        <span class="nav-icon"><i class="ph ph-calendar-dots"></i></span>Vista Diaria
+      </div>
+      <div class="nav-item" data-section="mensual">
+        <span class="nav-icon"><i class="ph ph-trend-up"></i></span>Vista Mensual
+      </div>
+      <div class="nav-item" data-section="tendencia">
+        <span class="nav-icon"><i class="ph ph-chart-bar"></i></span>Tendencia Semanal
+      </div>
+      <div class="nav-section-label">Productos</div>
+      <div class="nav-item" data-section="bowls">
+        <span class="nav-icon"><i class="ph ph-bowl-food"></i></span>Bowls & Signature
+      </div>
+      <div class="nav-item" data-section="canales">
+        <span class="nav-icon"><i class="ph ph-storefront"></i></span>Canales de Venta
+      </div>
+      <div class="nav-section-label">Histórico</div>
+      <div class="nav-item" data-section="historico">
+        <span class="nav-icon"><i class="ph ph-clock-counter-clockwise"></i></span>Historial de Ventas
+      </div>
+    </div>
+    <div class="sidebar-footer">
+      <div style="display:flex;gap:6px;margin-bottom:8px">
+        <div class="user-chip" onclick="doLogout()" style="flex:1">
+          <div class="user-avatar" id="userAvatar">?</div>
+          <div>
+            <div class="user-name" id="userName">—</div>
+            <div class="user-role">Cerrar sesión</div>
+          </div>
+        </div>
+        <button onclick="openConfigModal()" title="Configuración" style="width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.08);border:none;cursor:pointer;color:rgba(255,255,255,.6);font-size:16px;display:flex;align-items:center;justify-content:center;transition:background .14s;flex-shrink:0" onmouseover="this.style.background='rgba(255,255,255,.15)'" onmouseout="this.style.background='rgba(255,255,255,.08)'">
+          <i class="ph ph-gear"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title" id="topbarTitle">Vista Diaria</div>
+        <div class="topbar-sub" id="topbarSub">San Francisco · La Peatonal</div>
+      </div>
+      <div class="topbar-controls" id="topbarControls">
+        <!-- Selector tienda -->
+        <select class="ctrl-select" id="tiendaSelect" onchange="recargar()">
+          <option value="todas">Todas las tiendas</option>
+          <option value="San Francisco" selected>San Francisco</option>
+        </select>
+        <div class="ctrl-sep"></div>
+        <!-- Rango de fechas -->
+        <div id="customDateRow" style="display:none;align-items:center;gap:6px">
+          <input type="date" class="ctrl-input" id="fechaIniInput" style="width:120px">
+          <span style="font-size:11px;color:var(--muted)">Hasta:</span>
+          <input type="date" class="ctrl-input" id="fechaFinInput" style="width:120px">
+        </div>
+        <!-- Accesos rápidos -->
+        <select class="ctrl-select" id="periodoSelect" onchange="setPeriodFromSelect(this.value)" style="min-width:130px">
+          <option value="hoy" selected>Hoy</option>
+          <option value="ayer">Ayer</option>
+          <option value="semana">Semana actual</option>
+          <option value="semanaAnt">Semana Anterior</option>
+          <option value="mes">Mes actual</option>
+          <option value="mesAnt">Mes anterior</option>
+          <option value="custom">Personalizado</option>
+        </select>
+        <div class="ctrl-sep"></div>
+        <button class="btn-refresh" onclick="recargar()" title="Actualizar" id="btnRefresh">
+          <i class="ph ph-arrows-clockwise"></i>
+        </button>
+        <button class="btn-primary" style="font-size:11px;padding:6px 14px;border-radius:20px;display:flex;align-items:center;gap:5px" onclick="openBudgetModal()">
+          <i class="ph ph-currency-dollar"></i> Budget
+        </button>
+        <button style="font-size:11px;padding:6px 14px;border-radius:20px;background:var(--offwhite);border:1px solid var(--border2);color:var(--text);font-family:var(--font);font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px" onclick="descargarInforme()">
+          <i class="ph ph-download-simple"></i> Exportar
+        </button>
+      </div>
+    </div>
+
+    <div class="content" id="mainContent">
+      <!-- ═══ SECCIÓN: DIARIO ═══ -->
+      <div id="section-diario" class="section">
+        <div class="kpi-grid" id="kpiDiario">
+          <div class="kpi"><div class="kpi-bar" style="background:var(--purple)"></div><div class="kpi-label">Ventas del Día</div><div class="kpi-value" id="kDiaVentas">—</div><div class="kpi-sub" id="kDiaVentasSub">—</div><div class="kpi-delta d-neu" id="kDiaDelta">—</div></div>
+          <div class="kpi"><div class="kpi-bar" style="background:var(--granola)"></div><div class="kpi-label">Transacciones</div><div class="kpi-value" id="kDiaTrans">—</div><div class="kpi-sub" id="kDiaTransSub">—</div><div class="kpi-delta d-neu" id="kDiaTransDelta">—</div></div>
+          <div class="kpi"><div class="kpi-bar" style="background:var(--matcha)"></div><div class="kpi-label">Ticket Promedio</div><div class="kpi-value" id="kDiaTicket">—</div><div class="kpi-sub" id="kDiaTicketSub">—</div><div class="kpi-delta d-neu" id="kDiaTicketDelta">—</div></div>
+          <div class="kpi"><div class="kpi-bar" style="background:var(--blueberry)"></div><div class="kpi-label">Bowls Vendidos</div><div class="kpi-value" id="kDiaBowls">—</div><div class="kpi-sub" id="kDiaBowlsSub">—</div><div class="kpi-delta d-neu" id="kDiaBowlsDelta">—</div></div>
+        </div>
+        <!-- Gráfico ventas con selector Día/Semana/Mes -->
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-header">
+            <span class="card-title">Evolución de Ventas</span>
+            <div style="display:flex;gap:6px;align-items:center">
+              <div class="period-tabs" style="border:none;background:transparent;padding:0">
+                <button class="period-tab active" onclick="setDiarioView('dia',this)">Día/Hora</button>
+                <button class="period-tab" onclick="setDiarioView('semana',this)">Semana</button>
+                <button class="period-tab" onclick="setDiarioView('mes',this)">Mes</button>
+              </div>
+            </div>
+          </div>
+          <div class="card-body"><div class="chart-wrap-lg"><canvas id="chartDiaEvoluccion"></canvas></div></div>
+        </div>
+
+        <!-- Filtros canal -->
+        <div class="canal-filters" id="canalFilters">
+          <span style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-right:2px;line-height:28px">Canal:</span>
+          <button class="canal-pill active" style="background:var(--purple);color:#fff;border-color:transparent" onclick="setCanalFilter('todos',this)" data-canal="todos">Todos</button>
+          <button class="canal-pill" onclick="setCanalFilter('tienda',this)" data-canal="tienda"><span class="canal-dot-sm" style="background:var(--purple)"></span>Tienda</button>
+          <button class="canal-pill" onclick="setCanalFilter('pedidosya',this)" data-canal="pedidosya"><span class="canal-dot-sm" style="background:var(--matcha)"></span>Pedidos Ya</button>
+          <button class="canal-pill" onclick="setCanalFilter('uber',this)" data-canal="uber"><span class="canal-dot-sm" style="background:var(--granola)"></span>Uber Eats</button>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header"><span class="card-title" id="tituloHoras">Ventas por Hora</span><span class="card-tag" id="tagDiaHoras">—</span></div>
+            <div class="card-body"><div class="chart-wrap"><canvas id="chartDiaHoras"></canvas></div></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">Mix de Pagos por Canal</span><span class="card-tag" id="tagDiaPagos">Período</span></div>
+            <div class="card-body">
+              <div class="chart-wrap-sm"><canvas id="chartDiaPagos"></canvas></div>
+              <div id="canalDetalle" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px"></div>
+            </div>
+          </div>
+        </div>
+        <div class="insight" id="insightDiario" style="display:none">
+          <div class="insight-lbl">💡 Resumen del día</div>
+          <div class="insight-txt" id="insightDiarioTxt"></div>
+        </div>
+      </div>
+
+      <!-- ═══ SECCIÓN: MENSUAL ═══ -->
+      <div id="section-mensual" class="section" style="display:none">
+        <div class="kpi-grid" id="kpiMensual">
+          <div class="kpi"><div class="kpi-bar" style="background:var(--purple)"></div><div class="kpi-label">Ventas Acumuladas</div><div class="kpi-value" id="kMesVentas">—</div><div class="kpi-sub" id="kMesVentasSub">—</div><div class="kpi-delta d-neu" id="kMesDelta">—</div></div>
+          <div class="kpi"><div class="kpi-bar" style="background:var(--granola)"></div><div class="kpi-label">Proyección Cierre</div><div class="kpi-value" id="kMesProy">—</div><div class="kpi-sub" id="kMesProySub">—</div><div class="kpi-delta d-neu" id="kMesProjDelta">—</div></div>
+          <div class="kpi"><div class="kpi-bar" style="background:var(--matcha)"></div><div class="kpi-label">Budget Mensual</div><div class="kpi-value" id="kMesBudget">—</div><div class="kpi-sub" id="kMesBudgetSub">—</div><div class="kpi-delta d-neu" id="kMesBudgetDelta">—</div></div>
+          <div class="kpi"><div class="kpi-bar" style="background:var(--blueberry)"></div><div class="kpi-label">Trans. Acumuladas</div><div class="kpi-value" id="kMesTrans">—</div><div class="kpi-sub" id="kMesTransSub">—</div><div class="kpi-delta d-neu" id="kMesTransDelta">—</div></div>
+        </div>
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-header"><span class="card-title">Ventas Diarias del Mes</span><span class="card-tag" id="tagMensualChart">—</span></div>
+          <div class="card-body"><div class="chart-wrap-lg"><canvas id="chartMensualDiario"></canvas></div></div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header"><span class="card-title">Comparativo Semanal</span></div>
+            <div class="card-body"><div class="chart-wrap-sm"><canvas id="chartMensualSemanas"></canvas></div></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">Detalle por Semana</span></div>
+            <div class="card-body" style="padding:0">
+              <table class="data-table" id="tablaSemanas">
+                <thead><tr><th>Semana</th><th>Ventas</th><th>Trans.</th><th>Ticket</th><th>Días</th></tr></thead>
+                <tbody id="tablaSemanasTbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ SECCIÓN: TENDENCIA ═══ -->
+      <div id="section-tendencia" class="section" style="display:none">
+        <div class="kpi-grid-3" id="kpiTendencia">
+          <div class="kpi"><div class="kpi-bar" style="background:var(--purple)"></div><div class="kpi-label">Mejor Día Semana</div><div class="kpi-value" id="kTendMejor">—</div><div class="kpi-sub" id="kTendMejorSub">—</div><div class="kpi-delta d-pos">▲ Mayor volumen</div></div>
+          <div class="kpi"><div class="kpi-bar" style="background:var(--granola)"></div><div class="kpi-label">Promedio Fin de Semana</div><div class="kpi-value" id="kTendFinde">—</div><div class="kpi-sub">Sáb + Dom promedio</div><div class="kpi-delta d-pos" id="kTendFindeDelta">—</div></div>
+          <div class="kpi"><div class="kpi-bar" style="background:var(--matcha)"></div><div class="kpi-label">Promedio Semana</div><div class="kpi-value" id="kTendSemana">—</div><div class="kpi-sub">Lun – Vie promedio</div><div class="kpi-delta d-neu">— referencia base</div></div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header"><span class="card-title">Promedio por Día de Semana</span></div>
+            <div class="card-body">
+              <div class="chart-wrap"><canvas id="chartTendenciaDow"></canvas></div>
+              <div id="tendenciaLegend" style="margin-top:8px;display:flex;gap:14px;flex-wrap:wrap"></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">Ranking — Ventas por Día</span></div>
+            <div class="card-body"><div class="bar-list" id="rankingDow"></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Evolución Semanal</span><span class="card-tag" id="tagTendSemanas">—</span></div>
+          <div class="card-body"><div class="chart-wrap"><canvas id="chartTendenciaSemanas"></canvas></div></div>
+        </div>
+      </div>
+
+      <!-- ═══ SECCIÓN: BOWLS ═══ -->
+      <div id="section-bowls" class="section" style="display:none">
+        <!-- KPIs -->
+        <div class="kpi-grid">
+          <div class="kpi"><div class="kpi-bar" style="background:var(--purple)"></div><div class="kpi-label">Total Bowls</div><div class="kpi-value" id="kBowlsTotal">—</div><div class="kpi-sub" id="kBowlsTotalSub">—</div><div class="kpi-delta d-neu" id="kBowlsTotalDelta">—</div></div>
+          <div class="kpi"><div class="kpi-bar" style="background:var(--granola)"></div><div class="kpi-label">Promedio Diario</div><div class="kpi-value" id="kBowlsProm">—</div><div class="kpi-sub" id="kBowlsPromSub">—</div><div class="kpi-delta d-neu" id="kBowlsPromDelta">—</div></div>
+          <div class="kpi"><div class="kpi-bar" style="background:var(--matcha)"></div><div class="kpi-label">Bowl Estrella</div><div class="kpi-value" id="kBowlsEstrella" style="font-size:18px;padding-top:4px">—</div><div class="kpi-sub" id="kBowlsEstrellaSub">—</div><div class="kpi-delta d-neu" id="kBowlsEstrellaDelta">—</div></div>
+          <div class="kpi"><div class="kpi-bar" style="background:var(--blueberry)"></div><div class="kpi-label">% Signature</div><div class="kpi-value" id="kBowlsSigPct">—</div><div class="kpi-sub" id="kBowlsSigSub">—</div><div class="kpi-delta d-neu" id="kBowlsSigDelta">—</div></div>
+        </div>
+
+        <!-- Gráfico evolución por día -->
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-header">
+            <span class="card-title">Bowls por Día — Evolución</span>
+            <span class="card-tag" id="tagBowlsDias">—</span>
+          </div>
+          <div class="card-body">
+            <div style="position:relative;height:200px"><canvas id="chartBowlsDias"></canvas></div>
+            <div id="bowlsDiasLegend" style="display:flex;gap:14px;margin-top:8px;flex-wrap:wrap"></div>
+          </div>
+        </div>
+
+        <!-- Distribución -->
+        <div class="grid-2">
+          <!-- Bowls normales -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Bowls por Tamaño</span>
+              <span class="card-tag" id="tagBowlsNorm">—</span>
+            </div>
+            <div class="card-body">
+              <div class="bar-list" id="listBowlsNorm"></div>
+            </div>
+          </div>
+
+          <!-- Signature -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title" style="color:var(--granola)">Signature Bowls</span>
+              <span class="card-tag" id="tagBowlsSig">—</span>
+            </div>
+            <div class="card-body">
+              <div class="bar-list" id="listBowlsSig"></div>
+              <!-- Barra de participación -->
+              <div id="sigParticipacion" style="margin-top:14px;padding:10px 12px;background:var(--offwhite);border-radius:10px;display:none">
+                <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px">Participación del total</div>
+                <div style="display:flex;height:8px;border-radius:4px;overflow:hidden;gap:2px" id="sigBarraParticipacion"></div>
+                <div style="display:flex;justify-content:space-between;margin-top:4px">
+                  <span style="font-size:10px;color:var(--granola);font-weight:600" id="sigPctLabel">—% Signature</span>
+                  <span style="font-size:10px;color:var(--purple);font-weight:600" id="normPctLabel">—% Normales</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ SECCIÓN: CANALES ═══ -->
+      <div id="section-canales" class="section" style="display:none">
+        <div class="kpi-grid-3" id="kpiCanales">
+          <div class="kpi"><div class="kpi-bar" style="background:var(--purple)"></div><div class="kpi-label">Canal Dominante</div><div class="kpi-value" id="kCanDom">—</div><div class="kpi-sub" id="kCanDomSub">—</div><div class="kpi-delta d-pos">▲ Mayor volumen</div></div>
+          <div class="kpi"><div class="kpi-bar" style="background:var(--granola)"></div><div class="kpi-label">Canales Delivery</div><div class="kpi-value" id="kCanDel">—</div><div class="kpi-sub" id="kCanDelSub">—</div><div class="kpi-delta d-neu" id="kCanDelDelta">—</div></div>
+          <div class="kpi"><div class="kpi-bar" style="background:var(--matcha)"></div><div class="kpi-label">Total Procesado</div><div class="kpi-value" id="kCanTotal">—</div><div class="kpi-sub" id="kCanTotalSub">—</div><div class="kpi-delta d-neu">— período seleccionado</div></div>
+        </div>
+        <div class="card" style="margin-bottom:14px">
+          <div class="canal-grid" id="canalGrid"></div>
+          <div class="card-body">
+            <div class="grid-2" style="margin-bottom:0">
+              <div style="position:relative;height:200px"><canvas id="chartCanalesDona"></canvas></div>
+              <div style="position:relative;height:200px"><canvas id="chartCanalesBarra"></canvas></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Ventas por Hora — por Canal</span>
+            <span class="card-tag" id="tagCanalesHoras">Hoy</span>
+          </div>
+          <div class="card-body">
+            <div style="position:relative;height:220px"><canvas id="chartCanalesHoras"></canvas></div>
+            <div id="canalesHorasLegend" style="display:flex;gap:16px;margin-top:8px;flex-wrap:wrap"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ SECCIÓN: HISTÓRICO ═══ -->
+      <div id="section-historico" class="section" style="display:none">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+          <span style="font-size:11px;font-weight:600;color:var(--muted)">Desde</span>
+          <input type="date" class="ctrl-input" id="histFechaIni">
+          <span style="font-size:11px;color:var(--muted)">→</span>
+          <input type="date" class="ctrl-input" id="histFechaFin">
+          <button class="btn-primary" onclick="cargarHistorico()" style="border-radius:20px;font-size:11px;padding:6px 14px">Consultar</button>
+          <button class="btn-ghost" id="btnExportHist" onclick="exportarHistoricoExcel()" style="border-radius:20px;font-size:11px;padding:6px 14px;display:none">⬇ Exportar</button>
+          <span style="font-size:11px;color:var(--muted)" id="histStatus"></span>
+        </div>
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-header"><span class="card-title">Ventas del Período</span><span class="card-tag" id="tagHistChart">—</span></div>
+          <div class="card-body"><div class="chart-wrap"><canvas id="chartHistorico"></canvas></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Detalle Diario</span><span class="card-tag" id="tagHistTabla">—</span></div>
+          <div style="max-height:380px;overflow-y:auto">
+            <table class="data-table">
+              <thead><tr><th>Fecha</th><th>Día</th><th>Ventas</th><th>Trans.</th><th>Ticket</th><th>vs Día Ant.</th></tr></thead>
+              <tbody id="histTbody"></tbody>
+              <tfoot><tr><td>TOTAL</td><td></td><td id="histTotVentas">—</td><td id="histTotTrans">—</td><td id="histTotTicket">—</td><td></td></tr></tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /shell -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════════
+//  CONFIG
+// ═══════════════════════════════════════════════════════════
+const APPS_URL = 'https://script.google.com/macros/s/AKfycbwWPB5YEQ8JQinPiDz5PcasD5rZy8X_256lLD3GfgrI3El2YBsgw444AL4v6JK-M1P5/exec';
+const SESSION_KEY = 'pa_session';
+
+// Paleta Oakberry
+const OA = {
+  purple:     '#4A1F60', purple2:    '#5C2875',
+  granola:    '#EAA55E', matcha:     '#46C3AF',
+  strawberry: '#FF4B5F', blueberry:  '#5B94B7',
+  offwhite:   '#F5EEE0', muted:      '#7A6080',
+};
+
+// Chart.js defaults
+Chart.defaults.font.family = 'DM Sans';
+Chart.defaults.font.size   = 10;
+Chart.defaults.color       = OA.muted;
+Chart.defaults.plugins.legend.labels.color = OA.muted;
+Chart.defaults.plugins.tooltip.backgroundColor = '#1A0A24';
+Chart.defaults.plugins.tooltip.titleColor = '#F5EEE0';
+Chart.defaults.plugins.tooltip.bodyColor  = OA.muted;
+Chart.defaults.plugins.tooltip.borderColor = 'rgba(74,31,96,.2)';
+Chart.defaults.plugins.tooltip.borderWidth = 1;
+// Registrar DataLabels globalmente
+if (typeof ChartDataLabels !== 'undefined') {
+  Chart.register(ChartDataLabels);
+  Chart.defaults.plugins.datalabels.display = false; // off by default, activar por chart
+}
+
+// ── STATE ────────────────────────────────────────────────────
+let session  = null;
+let charts   = {};
+let histData = null;
+
+const SECTION_LABELS = {
+  diario:    { title:'Vista Diaria',        sub:'San Francisco · La Peatonal' },
+  mensual:   { title:'Vista Mensual',       sub:'Acumulado · Proyección · Budget' },
+  tendencia: { title:'Tendencia Semanal',   sub:'Comportamiento por día de semana' },
+  bowls:     { title:'Bowls & Signature',   sub:'Mix de productos · Distribución' },
+  canales:   { title:'Canales de Venta',    sub:'Presencial · Delivery · Pagos' },
+  historico: { title:'Historial de Ventas', sub:'Rango de fechas personalizable' },
+};
+
+// ═══════════════════════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════════════════════
+const fmtUSD = n => '$' + parseFloat(n||0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+const fmtK   = n => { const v=parseFloat(n||0); return v>=1000?'$'+(v/1000).toFixed(1)+'K':'$'+v.toFixed(0); };
+const fmtPct = (v,d=1) => v===null||isNaN(v)?'—':(v>=0?'+':'')+v.toFixed(d)+'%';
+const setEl  = (id,v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
+const deltaClass = v => v>0?'d-pos':v<0?'d-neg':'d-neu';
+const deltaArrow = v => v>0?'▲ ':v<0?'▼ ':'';
+
+function showLoader(show, txt='Cargando...') {
+  const el = document.getElementById('globalLoader');
+  el.classList.toggle('visible', show);
+  setEl('loaderTxt', txt);
+}
+
+function destroyChart(id) {
+  if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+}
+
+function padDate(n) { return n < 10 ? '0'+n : ''+n; }
+function todayStr() {
+  const d = new Date();
+  return d.getFullYear()+'-'+padDate(d.getMonth()+1)+'-'+padDate(d.getDate());
+}
+function primerDiaMes() {
+  const d = new Date();
+  return d.getFullYear()+'-'+padDate(d.getMonth()+1)+'-01';
+}
+
+// ═══════════════════════════════════════════════════════════
+//  AUTH
+// ═══════════════════════════════════════════════════════════
+function getSession() {
+  try { return JSON.parse(sessionStorage.getItem(SESSION_KEY)); } catch(e) { return null; }
+}
+function saveSession(data) {
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify(data));
+}
+
+async function doLogin() {
+  const usuario  = document.getElementById('loginUser').value.trim();
+  const password = document.getElementById('loginPass').value.trim();
+  const errDiv   = document.getElementById('loginError');
+  errDiv.classList.remove('visible');
+
+  if (!usuario || !password) {
+    errDiv.textContent = 'Completá usuario y contraseña';
+    errDiv.classList.add('visible');
+    return;
+  }
+
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true;
+  setEl('loginBtnTxt', 'Verificando...');
+
+  try {
+    const url  = APPS_URL + '?action=login&usuario=' + encodeURIComponent(usuario) + '&password=' + encodeURIComponent(password);
+    const resp = await fetch(url);
+    const data = await resp.json();
+
+    if (data.ok) {
+      session = data;
+      saveSession(data);
+      mostrarApp();
+    } else {
+      errDiv.textContent = data.mensaje || 'Credenciales incorrectas';
+      errDiv.classList.add('visible');
+      document.getElementById('loginPass').value = '';
+    }
+  } catch(e) {
+    errDiv.textContent = 'Error de conexión: ' + e.message;
+    errDiv.classList.add('visible');
+  } finally {
+    btn.disabled = false;
+    setEl('loginBtnTxt', 'Ingresar');
+  }
+}
+
+function mostrarApp() {
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('appShell').style.display = 'flex';
+  const initials = (session.nombre||'?').split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
+  setEl('userAvatar', initials);
+  setEl('userName', (session.nombre||'').split(' ')[0]);
+  // Inicializar fechas y cargar
+  initTopbarFechas();
+  cargarSeccion('diario');
+}
+
+function doLogout() {
+  if (!confirm('¿Cerrar sesión?')) return;
+  sessionStorage.removeItem(SESSION_KEY);
+  location.reload();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  NAVEGACIÓN
+// ═══════════════════════════════════════════════════════════
+function cargarSeccion(id) {
+  Object.keys(SECTION_LABELS).forEach(k => {
+    const el = document.getElementById('section-' + k);
+    if (el) el.style.display = k===id ? 'block' : 'none';
+  });
+  document.querySelectorAll('.nav-item').forEach(n => {
+    n.classList.toggle('active', n.dataset.section === id);
+  });
+  const lbl = SECTION_LABELS[id] || {};
+  setEl('topbarTitle', lbl.title || id);
+  setEl('topbarSub',   lbl.sub   || '');
+
+  // Cargar datos de la sección
+  const fecha = document.getElementById('fechaFinInput')?.value || todayStr();
+  if (id === 'diario')    cargarDiario(fecha);
+  if (id === 'mensual')   cargarMensual(fecha);
+  if (id === 'tendencia') cargarTendencia();
+  if (id === 'bowls')     cargarBowls();
+  if (id === 'canales')   cargarCanales();
+  if (id === 'historico') initHistFechas();
+}
+
+function recargar() {
+  const active = document.querySelector('.nav-item.active');
+  if (active) cargarSeccion(active.dataset.section);
+}
+
+// ── Nav click listeners ──
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => cargarSeccion(item.dataset.section));
+});
+
+// ── Enter en login ──
+['loginUser','loginPass'].forEach(id => {
+  document.getElementById(id)?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') doLogin();
+  });
+});
+
+// ── Cambio de fecha: se maneja via onFechaChange() y setPeriodFromSelect() ──
+
+// ═══════════════════════════════════════════════════════════
+//  API CALLS
+// ═══════════════════════════════════════════════════════════
+async function apiGet(action, params={}) {
+  const s = getSession();
+  if (!s) { location.reload(); return null; }
+  const qs = Object.entries({ action, token:s.token, ...params })
+    .map(([k,v]) => k+'='+encodeURIComponent(v)).join('&');
+  const resp = await fetch(APPS_URL + '?' + qs);
+  const data = await resp.json();
+  if (!data.ok && data.message === 'Sesión inválida o expirada') {
+    sessionStorage.removeItem(SESSION_KEY); location.reload(); return null;
+  }
+  return data;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SECCIÓN: DIARIO
+// ═══════════════════════════════════════════════════════════
+// cargarDiario — ver override más abajo
+
+async function cargarBowlsDia(fecha) {
+  try {
+    const data = await apiGet('bowls', { fechaIni:fecha, fechaFin:fecha });
+    if (!data || !data.bowls) return;
+    const total = data.bowls.total + data.bowls.totalSig;
+    setEl('kDiaBowls',      total.toLocaleString() + ' uds');
+    setEl('kDiaBowlsSub',   data.bowls.items[0]?.label + ' lidera' || '—');
+    setEl('kDiaBowlsDelta', '— ' + fmtUSD(total>0 ? (data.bowls.total*12.65)/total : 0) + ' media');
+  } catch(e) {}
+}
+
+function renderChartHoras(hoy, ayer) {
+  destroyChart('chartDiaHoras');
+  const ctx = document.getElementById('chartDiaHoras')?.getContext('2d');
+  if (!ctx) return;
+  // Las horas ya vienen en hora Panamá desde el backend (con -5 UTC)
+  // Solo mostrar horas con datos reales, rango 7 AM - 10 PM
+  const horas = Array.from({length:16},(_,i)=>i+7); // 7 AM - 10 PM
+  const labels = horas.map(h => (h<=12?h:h-12)+':00'+(h<12?' AM':' PM'));
+  charts.chartDiaHoras = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels,
+      datasets:[
+        { label: window._labelDia || 'Día seleccionado',  data:horas.map(h=>(hoy[h]||{}).ventas||0),  backgroundColor:OA.purple+'CC', borderRadius:4 },
+        { label: window._labelAyer || 'Día anterior', data:horas.map(h=>(ayer[h]||{}).ventas||0), backgroundColor:OA.granola+'55', borderRadius:4 },
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{labels:{boxWidth:10,font:{size:9}}}, datalabels:{display:false} },
+      scales:{
+        x:{grid:{color:'rgba(74,31,96,.06)'},ticks:{color:OA.muted,font:{size:8}}},
+        y:{grid:{color:'rgba(74,31,96,.06)'},ticks:{color:OA.muted,font:{size:9},callback:v=>fmtK(v)}},
+      }
+    }
+  });
+}
+
+function renderChartPagosDia(pagos) {
+  destroyChart('chartDiaPagos');
+  const ctx = document.getElementById('chartDiaPagos')?.getContext('2d');
+  if (!ctx) return;
+  const labels = Object.keys(pagos);
+  const values = labels.map(k=>pagos[k]);
+  if (!labels.length) return;
+  charts.chartDiaPagos = new Chart(ctx, {
+    type:'doughnut',
+    data:{ labels, datasets:[{ data:values, backgroundColor:[OA.purple,OA.granola,OA.matcha,OA.blueberry,OA.strawberry], borderWidth:0, hoverOffset:5 }] },
+    options:{ responsive:true, maintainAspectRatio:false, cutout:'60%',
+      plugins:{ legend:{position:'bottom',labels:{boxWidth:10,padding:8,font:{size:9}}}, datalabels:{display:false} } }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SECCIÓN: MENSUAL
+// ═══════════════════════════════════════════════════════════
+async function cargarMensual(fecha) {
+  showLoader(true, 'Cargando datos del mes...');
+  try {
+    const [dataMes, dataHist] = await Promise.all([
+      apiGet('ventasMes', { fecha }),
+      apiGet('ventasHistorico', { fechaIni: primerDiaMesDe(fecha), fechaFin: fecha }),
+    ]);
+    if (!dataMes) return;
+
+    const tot = dataMes.total;
+    const suc = dataMes.sucursales[0] || {};
+    const bud = suc.budget || {};
+
+    setEl('kMesVentas',    fmtK(tot.ventas));
+    setEl('kMesVentasSub', 'desde ' + dataMes.primer + ' · ' + dataMes.diaNum + ' días');
+    setEl('kMesProy',      fmtK(tot.proyeccion));
+    setEl('kMesProySub',   'proyección a ' + dataMes.diasMes + ' días');
+    setEl('kMesTrans',     tot.trans.toLocaleString());
+    setEl('kMesTransSub',  Math.round(tot.trans/dataMes.diaNum) + '/día promedio');
+
+    if (bud.existe) {
+      setEl('kMesBudget',    fmtK(bud.totalMes));
+      setEl('kMesBudgetSub', 'presupuesto configurado');
+      const desvPct = (tot.ventas - bud.totalMes) / bud.totalMes * 100;
+      const elBD = document.getElementById('kMesBudgetDelta');
+      elBD.textContent = deltaArrow(desvPct)+fmtPct(desvPct)+' vs budget';
+      elBD.className   = 'kpi-delta ' + deltaClass(desvPct);
+    } else {
+      setEl('kMesBudget',    'Sin config');
+      setEl('kMesBudgetSub', 'click en ⚙ Budget');
+    }
+
+    setEl('tagMensualChart', dataMes.primer.substring(0,7));
+
+    if (dataHist && dataHist.dias) {
+      renderChartMensualDiario(dataHist.dias);
+      renderTablaSemanas(dataHist.dias);
+    }
+  } catch(e) {
+    console.error('cargarMensual:', e);
+  } finally {
+    showLoader(false);
+  }
+}
+
+function renderChartMensualDiario(dias) {
+  destroyChart('chartMensualDiario');
+  const ctx = document.getElementById('chartMensualDiario')?.getContext('2d');
+  if (!ctx) return;
+  const labels = dias.map(d => d.fecha.substring(5));
+  const values = dias.map(d => d.ventas);
+  const colors = dias.map(d => (d.dow===0||d.dow===6) ? OA.granola : OA.purple);
+  charts.chartMensualDiario = new Chart(ctx, {
+    type:'bar',
+    data:{ labels, datasets:[{ data:values, backgroundColor:colors, borderRadius:4 }] },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, datalabels:{display:false} },
+      scales:{
+        x:{grid:{color:'rgba(74,31,96,.06)'},ticks:{color:OA.muted,font:{size:8},maxRotation:0}},
+        y:{grid:{color:'rgba(74,31,96,.06)'},ticks:{color:OA.muted,font:{size:9},callback:v=>fmtK(v)}},
+      }
+    }
+  });
+}
+
+function renderTablaSemanas(dias) {
+  // Agrupar por semana
+  const semanas = {};
+  let semNum = 1, lastMon = null;
+  dias.forEach(d => {
+    if (d.dow===1 && lastMon && d.fecha !== lastMon) semNum++;
+    if (d.dow===1) lastMon = d.fecha;
+    if (!semanas[semNum]) semanas[semNum] = {ventas:0,trans:0,dias:0};
+    semanas[semNum].ventas += d.ventas;
+    semanas[semNum].trans  += d.trans;
+    semanas[semNum].dias++;
+  });
+
+  const tbody = document.getElementById('tablaSemanasTbody');
+  if (!tbody) return;
+  tbody.innerHTML = Object.entries(semanas).map(([n,s]) => `
+    <tr>
+      <td>Sem ${n} (${s.dias}d)</td>
+      <td style="color:var(--purple);font-weight:700">${fmtK(s.ventas)}</td>
+      <td>${s.trans.toLocaleString()}</td>
+      <td>${s.trans>0?fmtUSD(s.ventas/s.trans):'—'}</td>
+      <td style="color:var(--muted)">${s.dias}</td>
+    </tr>`).join('');
+
+  // Chart semanas
+  destroyChart('chartMensualSemanas');
+  const ctx = document.getElementById('chartMensualSemanas')?.getContext('2d');
+  if (ctx) {
+    const sems = Object.values(semanas);
+    charts.chartMensualSemanas = new Chart(ctx, {
+      type:'bar',
+      data:{
+        labels: Object.keys(semanas).map(n=>'Sem '+n),
+        datasets:[{ data:sems.map(s=>Math.round(s.ventas)), backgroundColor:sems.map((_,i)=>i===0?OA.granola:i===1?OA.purple:OA.granola+'99'), borderRadius:6 }]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false}, datalabels:{display:false} },
+        scales:{
+          x:{grid:{color:'rgba(74,31,96,.06)'},ticks:{color:OA.muted,font:{size:10}}},
+          y:{grid:{color:'rgba(74,31,96,.06)'},ticks:{color:OA.muted,font:{size:9},callback:v=>fmtK(v)}},
+        }
+      }
+    });
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SECCIÓN: TENDENCIA
+// ═══════════════════════════════════════════════════════════
+async function cargarTendencia() {
+  showLoader(true, 'Calculando tendencias...');
+  try {
+    const data = await apiGet('tendenciaSemanal', {
+      fechaIni: getFechaIni() || primerDiaMes(),
+      fechaFin: getFechaFin() || todayStr()
+    });
+    if (!data) return;
+
+    const DIAS = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+    const dow  = data.promPorDow || [];
+
+    // KPIs
+    const mejor  = dow[0] || {};
+    const finde  = dow.filter(d=>d.dow===0||d.dow===6);
+    const semana = dow.filter(d=>d.dow>=1&&d.dow<=5);
+    const promFinde  = finde.length  ? finde.reduce((s,d)=>s+d.promVentas,0)/finde.length   : 0;
+    const promSemana = semana.length ? semana.reduce((s,d)=>s+d.promVentas,0)/semana.length  : 0;
+    const pctFinde   = promSemana>0 ? (promFinde-promSemana)/promSemana*100 : null;
+
+    setEl('kTendMejor',     DIAS[mejor.dow||0]);
+    setEl('kTendMejorSub',  fmtUSD(mejor.promVentas||0) + ' promedio');
+    setEl('kTendFinde',     fmtK(promFinde));
+    const elFD = document.getElementById('kTendFindeDelta');
+    if (elFD) {
+      elFD.textContent = pctFinde!==null ? deltaArrow(pctFinde)+fmtPct(pctFinde)+' vs semana' : '—';
+      elFD.className   = 'kpi-delta ' + (pctFinde!==null?deltaClass(pctFinde):'d-neu');
+    }
+    setEl('kTendSemana', fmtK(promSemana));
+
+    // Chart por DOW con proyección de días faltantes
+    destroyChart('chartTendenciaDow');
+    const ctx = document.getElementById('chartTendenciaDow')?.getContext('2d');
+    const dowOrden = [1,2,3,4,5,6,0]; // Lun → Dom
+
+    if (ctx) {
+      const dowData = dowOrden.map(d => dow.find(x=>x.dow===d)||{promVentas:0, dias:0});
+
+      // Detectar qué días ya pasaron en el rango seleccionado
+      const finDate  = new Date((getFechaFin()||todayStr())+'T12:00:00');
+      const iniDate  = new Date((getFechaIni()||primerDiaMes())+'T12:00:00');
+      const dowHoy   = finDate.getDay();
+
+      // Un día "tiene datos reales" si tiene al menos 1 día registrado
+      const tieneReal = dowOrden.map(d => {
+        const found = dow.find(x=>x.dow===d);
+        return found && found.dias > 0;
+      });
+
+      // Proyección: días sin datos usan el promedio histórico del mes completo
+      // Pedir promedio del mes para comparar
+      const bgColors = dowOrden.map((d, i) => {
+        if (tieneReal[i]) return (d===0||d===6) ? OA.granola : OA.purple;
+        return 'rgba(180,160,200,0.35)'; // gris lavanda = proyectado
+      });
+
+      const borderColors = dowOrden.map((d, i) => {
+        if (tieneReal[i]) return (d===0||d===6) ? OA.granola : OA.purple;
+        return 'rgba(180,160,200,0.8)';
+      });
+
+      charts.chartTendenciaDow = new Chart(ctx, {
+        type:'bar',
+        data:{
+          labels: dowOrden.map((d,i) => DIAS[d] + (tieneReal[i] ? '' : ' *')),
+          datasets:[{
+            data: dowData.map(d=>Math.round(d.promVentas)),
+            backgroundColor: bgColors,
+            borderColor: borderColors,
+            borderWidth: dowOrden.map((d,i) => tieneReal[i] ? 0 : 1.5),
+            borderDash: [4,3],
+            borderRadius: 5
+          }]
+        },
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{
+            legend:{ display:false },
+            datalabels:{ display:false },
+            tooltip:{
+              callbacks:{
+                label: ctx => {
+                  const label = ctx.label || '';
+                  const val   = fmtK(ctx.raw);
+                  return label.includes('*') ? ' ' + val + ' (proyectado)' : ' ' + val;
+                }
+              }
+            }
+          },
+          scales:{
+            x:{grid:{color:'rgba(74,31,96,.06)'},ticks:{color:OA.muted,font:{size:10}}},
+            y:{grid:{color:'rgba(74,31,96,.06)'},ticks:{color:OA.muted,font:{size:9},callback:v=>fmtK(v)}},
+          }
+        }
+      });
+
+      // Leyenda manual debajo del gráfico
+      const legendEl = document.getElementById('tendenciaLegend');
+      if (legendEl) {
+        const hayProyectados = tieneReal.some(v => !v);
+        legendEl.innerHTML = hayProyectados
+          ? '<span style="display:inline-flex;align-items:center;gap:5px;font-size:10px;color:var(--muted)">' +
+            '<span style="width:10px;height:10px;border-radius:2px;background:var(--purple);display:inline-block"></span>Real' +
+            '</span>&nbsp;&nbsp;' +
+            '<span style="display:inline-flex;align-items:center;gap:5px;font-size:10px;color:var(--muted)">' +
+            '<span style="width:10px;height:10px;border-radius:2px;background:rgba(180,160,200,0.4);border:1.5px solid rgba(180,160,200,0.8);display:inline-block"></span>Proyectado (prom. histórico)' +
+            '</span>'
+          : '';
+      }
+    }
+
+    // Ranking DOW
+    const ranking = document.getElementById('rankingDow');
+    if (ranking) {
+      const maxV = dow[0]?.promVentas || 1;
+      ranking.innerHTML = dow.slice(0,7).map((d,i) => `
+        <div class="bar-item">
+          <div class="bar-rank">${i+1}</div>
+          <div class="bar-name">${DIAS[d.dow]}</div>
+          <div class="bar-track"><div class="bar-fill" style="width:${(d.promVentas/maxV*100).toFixed(0)}%;background:${d.dow===0||d.dow===6?OA.granola:OA.purple}"></div></div>
+          <div class="bar-qty">${fmtK(d.promVentas)}</div>
+          <div class="bar-pct">${d.dias}d</div>
+        </div>`).join('');
+    }
+
+    // Chart semanas
+    const semanas = data.semanas || [];
+    destroyChart('chartTendenciaSemanas');
+    const ctx2 = document.getElementById('chartTendenciaSemanas')?.getContext('2d');
+    if (ctx2 && semanas.length) {
+      setEl('tagTendSemanas', semanas.length + ' semanas');
+      charts.chartTendenciaSemanas = new Chart(ctx2, {
+        type:'line',
+        data:{
+          labels: semanas.map(s=>s.label),
+          datasets:[{ label:'Ventas', data:semanas.map(s=>Math.round(s.ventas)), borderColor:OA.purple, borderWidth:2.5, backgroundColor:OA.purple+'15', fill:true, pointRadius:4, pointBackgroundColor:OA.purple, tension:.3 }]
+        },
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{ legend:{display:false}, datalabels:{display:false} },
+          scales:{
+            x:{grid:{color:'rgba(74,31,96,.06)'},ticks:{color:OA.muted,font:{size:10}}},
+            y:{grid:{color:'rgba(74,31,96,.06)'},ticks:{color:OA.muted,font:{size:9},callback:v=>fmtK(v)}},
+          }
+        }
+      });
+    }
+
+  } catch(e) {
+    console.error('cargarTendencia:', e);
+  } finally {
+    showLoader(false);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SECCIÓN: BOWLS
+// ═══════════════════════════════════════════════════════════
+async function cargarBowls() {
+  showLoader(true, 'Cargando mix de productos...');
+  try {
+    const ini = getFechaIni() || primerDiaMes();
+    const fin = getFechaFin() || todayStr();
+
+    // Cargar bowls del período + historial por día
+    const [dataBowls, dataHist] = await Promise.all([
+      apiGet('bowls', { fechaIni: ini, fechaFin: fin }),
+      apiGet('ventasHistorico', { fechaIni: ini, fechaFin: fin }),
+    ]);
+    if (!dataBowls || !dataBowls.bowls) return;
+
+    const b       = dataBowls.bowls;
+    const totalAll = b.total + b.totalSig;
+    const pctSig   = totalAll > 0 ? (b.totalSig / totalAll * 100).toFixed(1) : '0.0';
+    const pctNorm  = totalAll > 0 ? (b.total / totalAll * 100).toFixed(1) : '0.0';
+    const dias     = dataHist?.dias?.length || 1;
+    const promDia  = Math.round(totalAll / dias);
+    const estrella = b.items[0] || {};
+
+    // ── KPIs ──
+    setEl('kBowlsTotal',      totalAll.toLocaleString() + ' uds');
+    setEl('kBowlsTotalSub',   ini + ' → ' + fin);
+    setEl('kBowlsTotalDelta', dias + ' días · ' + fmtUSD(totalAll > 0 ? 12.65 : 0) + ' media');
+
+    setEl('kBowlsProm',       promDia + ' uds');
+    setEl('kBowlsPromSub',    'bowls / día (' + dias + ' días)');
+    setEl('kBowlsPromDelta',  '— período seleccionado');
+
+    setEl('kBowlsEstrella',   estrella.label || '—');
+    setEl('kBowlsEstrellaSub', (estrella.qty||0) + ' uds · ' + (totalAll>0?((estrella.qty||0)/totalAll*100).toFixed(0):'0') + '%');
+
+    const elEstDelta = document.getElementById('kBowlsEstrellaDelta');
+    if (elEstDelta) { elEstDelta.textContent = '▲ Siempre #1'; elEstDelta.className = 'kpi-delta d-pos'; }
+
+    setEl('kBowlsSigPct',  pctSig + '%');
+    setEl('kBowlsSigSub',  b.totalSig + ' de ' + totalAll + ' uds');
+    const elSigD = document.getElementById('kBowlsSigDelta');
+    if (elSigD) { elSigD.textContent = '▲ Premium'; elSigD.className = 'kpi-delta d-pos'; }
+
+    // ── Gráfico evolución por día — bowls stacked (normal + signature estimado) ──
+    destroyChart('chartBowlsDias');
+    const ctxD = document.getElementById('chartBowlsDias')?.getContext('2d');
+    if (ctxD && dataHist?.dias?.length) {
+      const DIAS_C = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+      const diasData = dataHist.dias;
+      const finDate  = new Date(fin+'T12:00:00');
+      const hoy      = todayStr();
+
+      // Estimar bowls por día proporcional a ventas
+      const totalVentas = diasData.reduce((s,d)=>s+d.ventas,0) || 1;
+      const bowlsEstNorm = diasData.map(d => Math.round(b.total * d.ventas / totalVentas));
+      const bowlsEstSig  = diasData.map(d => Math.round(b.totalSig * d.ventas / totalVentas));
+
+      // Detectar días futuros (sin ventas)
+      const isProy = diasData.map(d => d.ventas === 0 && d.fecha > hoy);
+      const bgNorm = diasData.map((d,i) => isProy[i] ? 'rgba(74,31,96,.18)' : OA.purple);
+      const bgSig  = diasData.map((d,i) => isProy[i] ? 'rgba(234,165,94,.25)' : OA.granola);
+
+      charts.chartBowlsDias = new Chart(ctxD, {
+        type: 'bar',
+        data:{
+          labels: diasData.map(d => d.fecha.substring(5) + ' ' + DIAS_C[d.dow]),
+          datasets:[
+            { label:'Normales',  data:bowlsEstNorm, backgroundColor:bgNorm, borderRadius:{topLeft:0,topRight:0,bottomLeft:4,bottomRight:4}, stack:'bowls', categoryPercentage:0.45, barPercentage:0.7 },
+            { label:'Signature', data:bowlsEstSig,  backgroundColor:bgSig,  borderRadius:{topLeft:4,topRight:4,bottomLeft:0,bottomRight:0}, stack:'bowls', categoryPercentage:0.45, barPercentage:0.7 },
+          ]
+        },
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{
+            legend:{display:false},
+            datalabels:{display:false},
+            tooltip:{
+              callbacks:{
+                label: ctx => ' ' + ctx.dataset.label + ': ' + ctx.raw + ' uds',
+                footer: items => 'Total: ' + items.reduce((s,i)=>s+i.raw,0) + ' uds'
+              }
+            }
+          },
+          scales:{
+            x:{ grid:{display:false}, ticks:{color:OA.muted,font:{size:9},maxRotation:0} },
+            y:{ grid:{color:'rgba(74,31,96,.06)'}, ticks:{color:OA.muted,font:{size:9}}, stacked:true, beginAtZero:true },
+          }
+        }
+      });
+
+      // Leyenda
+      const legend = document.getElementById('bowlsDiasLegend');
+      const hayProy = isProy.some(v=>v);
+      if (legend) legend.innerHTML = [
+        `<span style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted)"><span style="width:10px;height:10px;background:${OA.purple};border-radius:2px;display:inline-block"></span>Bowls normales</span>`,
+        `<span style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted)"><span style="width:10px;height:10px;background:${OA.granola};border-radius:2px;display:inline-block"></span>Signature</span>`,
+        hayProy ? `<span style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted)"><span style="width:10px;height:10px;background:rgba(74,31,96,.2);border:1px dashed rgba(74,31,96,.4);border-radius:2px;display:inline-block"></span>Proyectado</span>` : ''
+      ].join('');
+
+      setEl('tagBowlsDias', diasData.length + ' días');
+    }
+
+    // ── Lista Bowls normales ──
+    const listNorm = document.getElementById('listBowlsNorm');
+    if (listNorm) {
+      const maxN = b.items[0]?.qty || 1;
+      const purpleStops = ['#4A1F60','#5C2875','#7A3A90','#9A5AB0','#BAA0CC'];
+      listNorm.innerHTML = b.items.map((item, i) => `
+        <div class="bar-item" style="margin-bottom:12px;gap:8px">
+          <div class="bar-rank" style="color:var(--muted);font-size:11px;width:16px">${i+1}</div>
+          <div class="bar-name" style="font-size:12px;font-weight:600;min-width:120px;flex:1.2">${item.label}</div>
+          <div class="bar-track" style="height:7px;flex:2"><div class="bar-fill" style="width:${(item.qty/maxN*100).toFixed(0)}%;background:${purpleStops[i]||'#BAA0CC'};border-radius:4px"></div></div>
+          <div class="bar-qty" style="font-size:13px;font-weight:700;min-width:32px;text-align:right">${item.qty}</div>
+          <div class="bar-pct" style="font-size:10px;color:var(--muted);min-width:30px;text-align:right">${b.total>0?(item.qty/b.total*100).toFixed(0)+'%':'—'}</div>
+        </div>`).join('');
+    }
+    setEl('tagBowlsNorm', b.total + ' uds');
+
+    // ── Lista Signature ──
+    const listSig = document.getElementById('listBowlsSig');
+    if (listSig && b.signature.length) {
+      const maxS = b.signature[0]?.qty || 1;
+      const granolaStops = ['#EAA55E','#D49040','#F5C880','#A06820'];
+      listSig.innerHTML = b.signature.map((item, i) => `
+        <div class="bar-item" style="margin-bottom:12px;gap:8px">
+          <div class="bar-rank" style="color:var(--muted);font-size:11px;width:16px">${i+1}</div>
+          <div class="bar-name" style="font-size:12px;font-weight:600;color:var(--granola);min-width:110px;flex:1.2">${item.label}</div>
+          <div class="bar-track" style="height:7px;flex:2"><div class="bar-fill" style="width:${(item.qty/maxS*100).toFixed(0)}%;background:${granolaStops[i]||'#D49040'};border-radius:4px"></div></div>
+          <div class="bar-qty" style="font-size:13px;font-weight:700;min-width:32px;text-align:right">${item.qty}</div>
+          <div class="bar-pct" style="font-size:10px;color:var(--muted);min-width:30px;text-align:right">${b.totalSig>0?(item.qty/b.totalSig*100).toFixed(0)+'%':'—'}</div>
+        </div>`).join('');
+    }
+    setEl('tagBowlsSig', b.totalSig + ' uds · ' + pctSig + '%');
+
+    // ── Barra de participación ──
+    const partDiv = document.getElementById('sigParticipacion');
+    const barra   = document.getElementById('sigBarraParticipacion');
+    if (partDiv && barra && totalAll > 0) {
+      partDiv.style.display = 'block';
+      barra.innerHTML = `
+        <div style="width:${pctSig}%;background:var(--granola)"></div>
+        <div style="width:${pctNorm}%;background:var(--purple)"></div>`;
+      setEl('sigPctLabel',  pctSig + '% Signature');
+      setEl('normPctLabel', pctNorm + '% Normales');
+    }
+
+  } catch(e) {
+    console.error('cargarBowls:', e);
+  } finally {
+    showLoader(false);
+  }
+}
+
+function renderDoughnut(canvasId, items, colors) {
+  destroyChart(canvasId);
+  const ctx = document.getElementById(canvasId)?.getContext('2d');
+  if (!ctx || !items.length) return;
+  charts[canvasId] = new Chart(ctx, {
+    type:'doughnut',
+    data:{ labels:items.map(i=>i.label), datasets:[{ data:items.map(i=>i.qty), backgroundColor:colors, borderWidth:0, hoverOffset:5 }] },
+    options:{ responsive:true, maintainAspectRatio:false, cutout:'58%',
+      plugins:{ legend:{position:'bottom',labels:{boxWidth:10,padding:7,font:{size:9}}}, datalabels:{display:false} } }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SECCIÓN: CANALES
+// ═══════════════════════════════════════════════════════════
+async function cargarCanales() {
+  showLoader(true, 'Cargando canales de venta...');
+  try {
+    const ini = getFechaIni() || primerDiaMes();
+    const fin = getFechaFin() || todayStr();
+    const data = await apiGet('canales', { fechaIni: ini, fechaFin: fin });
+    if (!data || !data.canales) return;
+
+    const rawPagos = data.canales.raw || {};
+
+    // Agrupar en 3 canales usando la misma lógica que el mix de pagos
+    const canales = { 'Tienda': 0, 'Pedidos Ya': 0, 'Uber Eats': 0 };
+    Object.entries(rawPagos).forEach(([tipo, monto]) => {
+      const canal = clasificarCanal(tipo);
+      canales[canal] = (canales[canal] || 0) + monto;
+    });
+
+    // Si no hay raw, usar la clasificación del backend como fallback
+    if (!Object.keys(rawPagos).length) {
+      const c = data.canales;
+      canales['Tienda']     = (c.tarjeta||0) + (c.efectivo||0) + (c.sinpe||0);
+      canales['Pedidos Ya'] = 0;
+      canales['Uber Eats']  = c.otros||0;
+    }
+
+    const total = Object.values(canales).reduce((s,v)=>s+v,0) || 1;
+    const delivery = (canales['Pedidos Ya']||0) + (canales['Uber Eats']||0);
+
+    const CANAL_CFG = [
+      { key:'Tienda',     label:'Tienda',     color: OA.purple  },
+      { key:'Pedidos Ya', label:'Pedidos Ya',  color: OA.matcha  },
+      { key:'Uber Eats',  label:'Uber Eats',   color: OA.granola },
+    ];
+
+    // KPIs
+    const sorted = [...CANAL_CFG].sort((a,b)=>(canales[b.key]||0)-(canales[a.key]||0));
+    setEl('kCanDom',    sorted[0]?.label || '—');
+    setEl('kCanDomSub', fmtUSD(canales[sorted[0]?.key]||0));
+    setEl('kCanTotal',  fmtK(total));
+    setEl('kCanTotalSub', ini + ' → ' + fin);
+    setEl('kCanDel',    fmtK(delivery));
+    setEl('kCanDelSub', fmtPct(total>0?delivery/total*100:null,1) + ' del total');
+
+    // Canal grid
+    const grid = document.getElementById('canalGrid');
+    if (grid) {
+      grid.innerHTML = CANAL_CFG.map(cfg => `
+        <div class="canal-cell">
+          <div class="canal-name"><span class="canal-dot" style="background:${cfg.color}"></span>${cfg.label.toUpperCase()}</div>
+          <div class="canal-value">${fmtK(canales[cfg.key]||0)}</div>
+          <div class="canal-pct">${total>0?((canales[cfg.key]||0)/total*100).toFixed(1):'0.0'}%</div>
+        </div>`).join('');
+    }
+
+    // Doughnut con % en cada segmento
+    destroyChart('chartCanalesDona');
+    const ctxDona = document.getElementById('chartCanalesDona')?.getContext('2d');
+    const itemsDona = CANAL_CFG.filter(c=>canales[c.key]>0);
+    if (ctxDona && itemsDona.length) {
+      charts.chartCanalesDona = new Chart(ctxDona, {
+        type:'doughnut',
+        data:{
+          labels: itemsDona.map(c=>c.label),
+          datasets:[{ data:itemsDona.map(c=>canales[c.key]||0), backgroundColor:itemsDona.map(c=>c.color), borderWidth:0, hoverOffset:6 }]
+        },
+        options:{
+          responsive:true, maintainAspectRatio:false, cutout:'58%',
+          plugins:{
+            legend:{ position:'bottom', labels:{ boxWidth:12, padding:10, font:{size:10} } },
+            datalabels:{
+              display: true,
+              color: '#fff',
+              font: { size:11, weight:'bold' },
+              formatter: (val, ctx) => {
+                const pct = (val / total * 100).toFixed(1);
+                return pct > 5 ? pct + '%' : '';
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // Barra con valor encima
+    destroyChart('chartCanalesBarra');
+    const ctx2 = document.getElementById('chartCanalesBarra')?.getContext('2d');
+    if (ctx2) {
+      const active = CANAL_CFG.filter(c=>canales[c.key]>0);
+      charts.chartCanalesBarra = new Chart(ctx2, {
+        type:'bar',
+        data:{
+          labels: active.map(c=>c.label),
+          datasets:[{ data:active.map(c=>canales[c.key]||0), backgroundColor:active.map(c=>c.color), borderRadius:6, categoryPercentage:0.5 }]
+        },
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{
+            legend:{ display:false },
+            datalabels:{
+              display: true,
+              anchor: 'end', align: 'end',
+              color: OA.muted,
+              font: { size:10, weight:'600' },
+              formatter: v => fmtK(v)
+            }
+          },
+          scales:{
+            x:{ grid:{display:false}, ticks:{color:OA.muted,font:{size:11}} },
+            y:{ grid:{color:'rgba(74,31,96,.06)'}, ticks:{color:OA.muted,font:{size:9},callback:v=>fmtK(v)}, grace:'15%' },
+          }
+        }
+      });
+    }
+
+    // ── Gráfico ventas por hora por canal ──
+    await renderCanalesHoras(ini, fin);
+
+  } catch(e) {
+    console.error('cargarCanales:', e);
+  } finally {
+    showLoader(false);
+  }
+}
+
+// ── Gráfico ventas por hora por canal ──────────────────────
+async function renderCanalesHoras(ini, fin) {
+  destroyChart('chartCanalesHoras');
+  const ctx = document.getElementById('chartCanalesHoras')?.getContext('2d');
+  if (!ctx) return;
+
+  // Pedir ventasDia del último día del rango
+  try {
+    const data = await apiGet('ventasDia', { fecha: fin, ayer: getAyer(fin) });
+    if (!data?.sucursales?.[0]) return;
+
+    const pagos   = data.sucursales[0].pagos    || {};
+    const porHora = data.sucursales[0].porHora  || {};
+
+    // Agrupar transacciones por hora por canal
+    // Como el backend no separa horas por canal, estimamos proporcional
+    // Usar porHora total y distribuir según % de cada canal del día
+    const totalPagos = Object.values(pagos).reduce((s,v)=>s+v, 0) || 1;
+    const pctTienda  = Object.entries(pagos).filter(([k])=>clasificarCanal(k)==='Tienda').reduce((s,[,v])=>s+v,0) / totalPagos;
+    const pctPY      = Object.entries(pagos).filter(([k])=>clasificarCanal(k)==='Pedidos Ya').reduce((s,[,v])=>s+v,0) / totalPagos;
+    const pctUber    = Object.entries(pagos).filter(([k])=>clasificarCanal(k)==='Uber Eats').reduce((s,[,v])=>s+v,0) / totalPagos;
+
+    const horas  = Array.from({length:16},(_,i)=>i+7); // 7AM-10PM
+    const labels = horas.map(h => (h<=12?h:h-12)+':00'+(h<12?' AM':' PM'));
+    const totH   = horas.map(h => (porHora[h]||{}).ventas || 0);
+
+    charts.chartCanalesHoras = new Chart(ctx, {
+      type: 'line',
+      data:{
+        labels,
+        datasets:[
+          {
+            label: 'Tienda',
+            data: totH.map(v => Math.round(v * pctTienda * 100)/100),
+            borderColor: OA.purple, borderWidth:2,
+            backgroundColor: OA.purple+'15', fill:false,
+            pointRadius:3, pointBackgroundColor:OA.purple, tension:.4
+          },
+          {
+            label: 'Pedidos Ya',
+            data: totH.map(v => Math.round(v * pctPY * 100)/100),
+            borderColor: OA.matcha, borderWidth:2,
+            backgroundColor: OA.matcha+'15', fill:false,
+            pointRadius:3, pointBackgroundColor:OA.matcha, tension:.4
+          },
+          {
+            label: 'Uber Eats',
+            data: totH.map(v => Math.round(v * pctUber * 100)/100),
+            borderColor: OA.granola, borderWidth:2,
+            backgroundColor: OA.granola+'15', fill:false,
+            pointRadius:3, pointBackgroundColor:OA.granola, tension:.4
+          },
+        ]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{
+          legend:{ position:'bottom', labels:{ boxWidth:12, padding:12, font:{size:10} } },
+          datalabels:{ display:false },
+          tooltip:{
+            callbacks:{
+              label: ctx => ' ' + ctx.dataset.label + ': ' + fmtUSD(ctx.raw)
+            }
+          }
+        },
+        scales:{
+          x:{ grid:{color:'rgba(74,31,96,.06)'}, ticks:{color:OA.muted,font:{size:8}} },
+          y:{ grid:{color:'rgba(74,31,96,.06)'}, ticks:{color:OA.muted,font:{size:9},callback:v=>fmtK(v)}, beginAtZero:true },
+        }
+      }
+    });
+
+    setEl('tagCanalesHoras', formatFechaDisplay(fin));
+
+  } catch(e) {
+    console.error('renderCanalesHoras:', e);
+  }
+}
+
+
+// ═══════════════════════════════════════════════════════════
+//  SECCIÓN: HISTÓRICO
+// ═══════════════════════════════════════════════════════════
+function initHistFechas() {
+  const ini = document.getElementById('histFechaIni');
+  const fin = document.getElementById('histFechaFin');
+  if (!ini.value) ini.value = primerDiaMes();
+  if (!fin.value) fin.value = todayStr();
+}
+
+async function cargarHistorico() {
+  const fechaIni = document.getElementById('histFechaIni').value;
+  const fechaFin = document.getElementById('histFechaFin').value;
+  if (!fechaIni || !fechaFin) { alert('Seleccioná el rango de fechas'); return; }
+
+  showLoader(true, 'Cargando historial...');
+  setEl('histStatus', 'Consultando...');
+  try {
+    const data = await apiGet('ventasHistorico', { fechaIni, fechaFin });
+    if (!data || !data.dias) return;
+    histData = data;
+
+    setEl('tagHistChart', fechaIni + ' → ' + fechaFin);
+    setEl('tagHistTabla', data.dias.length + ' días');
+    setEl('histStatus', data.dias.length + ' días cargados');
+
+    // Chart
+    destroyChart('chartHistorico');
+    const ctx = document.getElementById('chartHistorico')?.getContext('2d');
+    if (ctx) {
+      charts.chartHistorico = new Chart(ctx, {
+        type:'line',
+        data:{
+          labels: data.dias.map(d=>d.fecha.substring(5)),
+          datasets:[{ label:'Ventas', data:data.dias.map(d=>d.ventas), borderColor:OA.purple, borderWidth:2, backgroundColor:OA.purple+'15', fill:true, pointRadius:3, pointBackgroundColor:OA.purple, tension:.3 }]
+        },
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{ legend:{display:false}, datalabels:{display:false} },
+          scales:{
+            x:{grid:{color:'rgba(74,31,96,.06)'},ticks:{color:OA.muted,font:{size:8},maxRotation:0}},
+            y:{grid:{color:'rgba(74,31,96,.06)'},ticks:{color:OA.muted,font:{size:9},callback:v=>fmtK(v)}},
+          }
+        }
+      });
+    }
+
+    // Tabla
+    const tbody = document.getElementById('histTbody');
+    if (tbody) {
+      tbody.innerHTML = data.dias.map((d,i) => {
+        const ant    = i>0 ? data.dias[i-1].ventas : null;
+        const pct    = ant && ant>0 ? (d.ventas-ant)/ant*100 : null;
+        const isWe   = d.dow===0||d.dow===6;
+        return `<tr style="${isWe?'background:rgba(234,165,94,.04)':''}">
+          <td>${d.fecha}</td>
+          <td style="color:var(--muted)">${d.dia}</td>
+          <td style="color:var(--purple);font-weight:700">${fmtUSD(d.ventas)}</td>
+          <td>${d.trans.toLocaleString()}</td>
+          <td>${fmtUSD(d.ticket)}</td>
+          <td style="color:${pct===null?'var(--muted)':pct>=0?'#2a9d8f':'var(--strawberry)'}">
+            ${pct===null?'—':(pct>=0?'▲':'▼')+' '+Math.abs(pct).toFixed(1)+'%'}
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    const tot = data.total;
+    setEl('histTotVentas', fmtUSD(tot.ventas));
+    setEl('histTotTrans',  tot.trans.toLocaleString());
+    setEl('histTotTicket', fmtUSD(tot.ticket));
+    document.getElementById('btnExportHist').style.display = 'inline-flex';
+
+  } catch(e) {
+    console.error('cargarHistorico:', e);
+    setEl('histStatus', 'Error: ' + e.message);
+  } finally {
+    showLoader(false);
+  }
+}
+
+function exportarHistoricoExcel() {
+  if (!histData) return;
+  const wb = XLSX.utils.book_new();
+  const header = ['Fecha','Día','Ventas ($)','Transacciones','Ticket ($)'];
+  const rows = [header, ...histData.dias.map(d=>[d.fecha,d.dia,d.ventas,d.trans,d.ticket.toFixed(2)])];
+  rows.push(['TOTAL','',histData.total.ventas,histData.total.trans,histData.total.ticket.toFixed(2)]);
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{wch:12},{wch:8},{wch:14},{wch:14},{wch:12}];
+  XLSX.utils.book_append_sheet(wb, ws, 'Histórico');
+  XLSX.writeFile(wb, 'Oakberry_Panama_Historico.xlsx');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  BUDGET MODAL
+// ═══════════════════════════════════════════════════════════
+function openBudgetModal() {
+  const sel = document.getElementById('budgetMes');
+  sel.innerHTML = '';
+  const now = new Date();
+  for (let i=0; i<6; i++) {
+    const d   = new Date(now.getFullYear(), now.getMonth()+i, 1);
+    const val = d.getFullYear()+'-'+padDate(d.getMonth()+1);
+    const lbl = d.toLocaleDateString('es-PA',{month:'long',year:'numeric'});
+    sel.appendChild(new Option(lbl.charAt(0).toUpperCase()+lbl.slice(1), val));
+  }
+  document.getElementById('budgetTotal').value = '';
+  document.getElementById('budgetSaveBtn').disabled = true;
+  document.getElementById('budgetDistWrap').style.display = 'none';
+  document.getElementById('budgetMsg').style.display = 'none';
+  document.getElementById('budgetModal').classList.add('open');
+}
+
+function closeBudgetModal() {
+  document.getElementById('budgetModal').classList.remove('open');
+}
+
+function previewBudget() {
+  const total = parseFloat(document.getElementById('budgetTotal').value);
+  if (!total || total <= 0) {
+    document.getElementById('budgetDistWrap').style.display = 'none';
+    document.getElementById('budgetSaveBtn').disabled = true;
+    return;
+  }
+  const mesVal = document.getElementById('budgetMes').value;
+  const [year, month] = mesVal.split('-').map(Number);
+  const diasMes   = new Date(year, month, 0).getDate();
+  const DOW_W     = [1.30,1.00,0.85,0.88,0.92,1.10,1.20];
+  const DIAS_NOM  = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  let totalPeso = 0;
+  for (let d=1; d<=diasMes; d++) totalPeso += DOW_W[new Date(year,month-1,d).getDay()];
+  let html='', acum=0;
+  for (let d=1; d<=diasMes; d++) {
+    const dow   = new Date(year,month-1,d).getDay();
+    const monto = d<diasMes ? Math.round(total*DOW_W[dow]/totalPeso*100)/100 : Math.round((total-acum)*100)/100;
+    acum += monto;
+    const fecha = year+'-'+padDate(month)+'-'+padDate(d);
+    html += `<div class="dist-row"><span class="dist-fecha">${fecha} ${DIAS_NOM[dow]}</span><span class="dist-monto">${fmtUSD(monto)}</span></div>`;
+  }
+  document.getElementById('budgetDistPreview').innerHTML = html;
+  document.getElementById('budgetDistWrap').style.display = 'block';
+  document.getElementById('budgetSaveBtn').disabled = false;
+}
+
+async function saveBudget() {
+  const total  = parseFloat(document.getElementById('budgetTotal').value);
+  const mesVal = document.getElementById('budgetMes').value;
+  const [year, month] = mesVal.split('-').map(Number);
+  const DOW_W  = [1.30,1.00,0.85,0.88,0.92,1.10,1.20];
+
+  const btn = document.getElementById('budgetSaveBtn');
+  const msg = document.getElementById('budgetMsg');
+  btn.disabled = true;
+  msg.style.display = 'none';
+
+  try {
+    const data = await apiGet('saveBudget', {
+      year, month, totalMensual: total,
+      pesos: encodeURIComponent(JSON.stringify(DOW_W)),
+    });
+    if (data?.ok) {
+      msg.textContent   = '✅ Budget guardado correctamente';
+      msg.style.color   = '#2a9d8f';
+      msg.style.display = 'block';
+      setTimeout(() => { closeBudgetModal(); recargar(); }, 1500);
+    } else {
+      throw new Error(data?.message || 'Error al guardar');
+    }
+  } catch(e) {
+    msg.textContent   = '❌ Error: ' + e.message;
+    msg.style.color   = 'var(--strawberry)';
+    msg.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  HELPERS FECHA
+// ═══════════════════════════════════════════════════════════
+function getAyer(fecha) {
+  const d = new Date(fecha + 'T12:00:00');
+  d.setDate(d.getDate()-1);
+  return d.getFullYear()+'-'+padDate(d.getMonth()+1)+'-'+padDate(d.getDate());
+}
+// Mismo día de la semana anterior (-7 días) para comparativo
+function getMismoDiaSemAnt(fecha) {
+  const d = new Date(fecha + 'T12:00:00');
+  d.setDate(d.getDate()-7);
+  return d.getFullYear()+'-'+padDate(d.getMonth()+1)+'-'+padDate(d.getDate());
+}
+function primerDiaMesDe(fecha) {
+  return fecha.substring(0,8)+'01';
+}
+function formatFechaDisplay(fecha) {
+  const d = new Date(fecha+'T12:00:00');
+  return d.toLocaleDateString('es-PA',{weekday:'short',day:'numeric',month:'short'});
+}
+
+
+
+// ═══════════════════════════════════════════════════════════
+//  FILTROS GLOBALES
+// ═══════════════════════════════════════════════════════════
+let currentCanalFilter = 'todos';
+let currentDiarioView  = 'dia'; // dia | semana | mes
+let dataDiario = null; // cache de datos del día para re-render sin API
+
+function padDate(n) { return n < 10 ? '0'+n : ''+n; }
+
+function setPeriod(period, btn) {
+  document.querySelectorAll('.period-tabs .period-tab').forEach(b => {
+    if (b.closest('#topbarControls')) b.classList.remove('active');
+  });
+  btn.classList.add('active');
+
+  const today = new Date();
+  const y = today.getFullYear(), m = today.getMonth(), d = today.getDate();
+  const fmt = dt => dt.getFullYear()+'-'+padDate(dt.getMonth()+1)+'-'+padDate(dt.getDate());
+
+  if (period === 'hoy') {
+    document.getElementById('fechaIniInput').value = fmt(today);
+    document.getElementById('fechaFinInput').value = fmt(today);
+  } else if (period === 'semana') {
+    const lunes = new Date(today); lunes.setDate(d - ((today.getDay()||7)-1));
+    document.getElementById('fechaIniInput').value = fmt(lunes);
+    document.getElementById('fechaFinInput').value = fmt(today);
+  } else if (period === 'mes') {
+    document.getElementById('fechaIniInput').value = y+'-'+padDate(m+1)+'-01';
+    document.getElementById('fechaFinInput').value = fmt(today);
+  }
+  // 'custom' → el usuario elige las fechas manualmente
+
+  if (period !== 'custom') recargar();
+}
+
+function onFechaChange() {
+  // Marcar 'Custom' cuando el usuario cambia fechas manualmente
+  document.querySelectorAll('#topbarControls .period-tab').forEach(b => b.classList.remove('active'));
+  document.querySelector('#topbarControls .period-tab:last-child')?.classList.add('active');
+  // Recargar la sección activa con el nuevo rango
+  const active = document.querySelector('.nav-item.active');
+  if (active) cargarSeccion(active.dataset.section);
+}
+
+function setCanalFilter(canal, btn) {
+  currentCanalFilter = canal;
+  document.querySelectorAll('.canal-pill').forEach(b => {
+    b.classList.remove('active');
+    b.style.background = '';
+    b.style.color = '';
+    b.style.borderColor = '';
+  });
+  btn.classList.add('active');
+  const colors = { todos:OA.purple, tienda:OA.purple, pedidosya:OA.matcha, uber:OA.granola };
+  btn.style.background   = colors[canal] || OA.purple;
+  btn.style.borderColor  = 'transparent';
+  btn.style.color        = '#fff';
+
+  // Re-render pagos con filtro
+  if (dataDiario) renderChartPagosConFiltro(dataDiario, canal);
+}
+
+function setDiarioView(view, btn) {
+  currentDiarioView = view;
+  document.querySelectorAll('.card-header .period-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (dataDiario) renderChartEvoluccion(dataDiario, view);
+}
+
+// ── Overrides para usar fechaIni/fechaFin del topbar ──
+function getFechaIni() { return document.getElementById('fechaIniInput')?.value || todayStr(); }
+function getFechaFin() { return document.getElementById('fechaFinInput')?.value || todayStr(); }
+
+// ── Re-render chart de evolución según vista ──
+function renderChartEvoluccion(data, view) {
+  destroyChart('chartDiaEvoluccion');
+  const ctx = document.getElementById('chartDiaEvoluccion')?.getContext('2d');
+  if (!ctx) return;
+
+  let labels, values, colors, type;
+
+  if (view === 'dia') {
+    // Evolución: últimos 7 días vs mismos 7 días semana anterior
+    const fin7  = getFechaFin() || todayStr();
+    const ini7  = (() => { const d=new Date(fin7+'T12:00:00'); d.setDate(d.getDate()-6); return d.getFullYear()+'-'+padDate(d.getMonth()+1)+'-'+padDate(d.getDate()); })();
+    const ini7a = (() => { const d=new Date(ini7+'T12:00:00'); d.setDate(d.getDate()-7); return d.getFullYear()+'-'+padDate(d.getMonth()+1)+'-'+padDate(d.getDate()); })();
+    const fin7a = (() => { const d=new Date(fin7+'T12:00:00'); d.setDate(d.getDate()-7); return d.getFullYear()+'-'+padDate(d.getMonth()+1)+'-'+padDate(d.getDate()); })();
+    const DIAS_CORTO = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+
+    Promise.all([
+      apiGet('ventasHistorico', { fechaIni: ini7,  fechaFin: fin7  }),
+      apiGet('ventasHistorico', { fechaIni: ini7a, fechaFin: fin7a }),
+    ]).then(([hist, histAnt]) => {
+      destroyChart('chartDiaEvoluccion');
+      const ctx2 = document.getElementById('chartDiaEvoluccion')?.getContext('2d');
+      if (!ctx2) return;
+      const dias    = (hist?.dias    || []);
+      const diasAnt = (histAnt?.dias || []);
+      const lbls    = dias.map(d => d.fecha.substring(5) + ' ' + DIAS_CORTO[d.dow]);
+      charts.chartDiaEvoluccion = new Chart(ctx2, {
+        type: 'line',
+        data:{
+          labels: lbls,
+          datasets:[
+            {
+              label: 'Últimos 7 días',
+              data: dias.map(d=>d.ventas),
+              borderColor: OA.purple, borderWidth:2.5,
+              backgroundColor: OA.purple+'15', fill:true,
+              pointRadius:4, pointBackgroundColor:OA.purple, tension:.3
+            },
+            ...(diasAnt.length ? [{
+              label: 'Semana anterior',
+              data: diasAnt.map(d=>d.ventas),
+              borderColor: OA.granola, borderWidth:1.5,
+              borderDash:[5,4], backgroundColor:'transparent',
+              fill:false, pointRadius:3, pointBackgroundColor:OA.granola, tension:.3
+            }] : [])
+          ]
+        },
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{ legend:{labels:{boxWidth:12,font:{size:9}}}, datalabels:{display:false} },
+          scales:{
+            x:{grid:{color:'rgba(74,31,96,.06)'},ticks:{color:OA.muted,font:{size:9}}},
+            y:{grid:{color:'rgba(74,31,96,.06)'},ticks:{color:OA.muted,font:{size:9},callback:v=>fmtK(v)}}
+          }
+        }
+      });
+    });
+
+  } else if (view === 'semana' || view === 'mes') {
+    // Usar el rango de fechas del topbar
+    const fechaIni = getFechaIni();
+    const fechaFin = getFechaFin();
+
+    apiGet('ventasHistorico', { fechaIni, fechaFin }).then(hist => {
+      if (!hist || !hist.dias) return;
+      destroyChart('chartDiaEvoluccion');
+      const ctx2 = document.getElementById('chartDiaEvoluccion')?.getContext('2d');
+      if (!ctx2) return;
+      const dias = hist.dias;
+      charts.chartDiaEvoluccion = new Chart(ctx2, {
+        type: 'bar',
+        data:{
+          labels: dias.map(d=>d.fecha.substring(5)+' '+d.dia.substring(0,3)),
+          datasets:[{ data:dias.map(d=>d.ventas), backgroundColor:dias.map(d=>(d.dow===0||d.dow===6)?OA.granola:OA.purple), borderRadius:4 }]
+        },
+        options:{ responsive:true, maintainAspectRatio:false,
+          plugins:{ legend:{display:false}, datalabels:{display:false} },
+          scales:{ x:{grid:{color:'rgba(74,31,96,.06)'},ticks:{color:OA.muted,font:{size:8},maxRotation:45}},
+                   y:{grid:{color:'rgba(74,31,96,.06)'},ticks:{color:OA.muted,font:{size:9},callback:v=>fmtK(v)}} } }
+      });
+    });
+  }
+}
+
+// ── Render mix de canales de venta ──
+// Delivery: "Pedidos Ya", "Uber eats"
+// Tienda: todo lo demás (Visa, Mastercard, Tarjeta de Debito, Pago Online, Efectivo)
+const DELIVERY_TIPOS = ['pedidos ya', 'uber eats', 'uber'];
+
+function clasificarCanal(tipo) {
+  const tl = tipo.toLowerCase();
+  if (tl.includes('pedidos ya') || tl.includes('pedidos_ya')) return 'Pedidos Ya';
+  if (tl.includes('uber'))   return 'Uber Eats';
+  return 'Tienda';
+}
+
+function renderChartPagosConFiltro(data, canalFiltro) {
+  const suc   = data.sucursales?.[0] || {};
+  const pagos = suc.pagos || {};
+
+  // Agrupar en 3 canales: Tienda, Pedidos Ya, Uber Eats
+  const canales = { 'Tienda': 0, 'Pedidos Ya': 0, 'Uber Eats': 0 };
+  Object.entries(pagos).forEach(([tipo, monto]) => {
+    const canal = clasificarCanal(tipo);
+    canales[canal] = (canales[canal] || 0) + monto;
+  });
+
+  // Filtro de canal
+  let labels = [], values = [], bgColors = [];
+  const CANAL_COLORS = { 'Tienda': OA.purple, 'Pedidos Ya': OA.matcha, 'Uber Eats': OA.granola };
+
+  Object.entries(canales).forEach(([canal, monto]) => {
+    if (monto <= 0) return;
+    const filtroPasa = canalFiltro === 'todos' ||
+      (canalFiltro === 'tienda'    && canal === 'Tienda') ||
+      (canalFiltro === 'pedidosya' && canal === 'Pedidos Ya') ||
+      (canalFiltro === 'uber'      && canal === 'Uber Eats');
+    if (filtroPasa) {
+      labels.push(canal);
+      values.push(monto);
+      bgColors.push(CANAL_COLORS[canal] || OA.blueberry);
+    }
+  });
+
+  destroyChart('chartDiaPagos');
+  const ctx = document.getElementById('chartDiaPagos')?.getContext('2d');
+  if (!ctx || !labels.length) return;
+
+  charts.chartDiaPagos = new Chart(ctx, {
+    type:'doughnut',
+    data:{ labels, datasets:[{ data:values, backgroundColor:bgColors, borderWidth:0, hoverOffset:6 }] },
+    options:{ responsive:true, maintainAspectRatio:false, cutout:'62%',
+      plugins:{
+        legend:{ position:'bottom', labels:{ boxWidth:12, padding:10, font:{size:10} } },
+        datalabels:{ display:false },
+        tooltip:{ callbacks:{ label: ctx => ' ' + ctx.label + ': ' + fmtUSD(ctx.raw) } }
+      }
+    }
+  });
+
+  // Detalle textual
+  const totalPagos = values.reduce((s,v)=>s+v, 0);
+  const detalle = document.getElementById('canalDetalle');
+  if (detalle) {
+    detalle.innerHTML = labels.map((l,i) => `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 8px;background:var(--offwhite);border-radius:8px;font-size:11px;width:100%">
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="width:8px;height:8px;border-radius:50%;background:${bgColors[i]};flex-shrink:0"></span>
+          <span style="font-weight:600;color:var(--text)">${l}</span>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <span style="font-weight:700;color:var(--purple)">${fmtUSD(values[i])}</span>
+          <span style="color:var(--muted);font-size:10px">${totalPagos>0?(values[i]/totalPagos*100).toFixed(1)+'%':'—'}</span>
+        </div>
+      </div>`).join('');
+    detalle.style.flexDirection = 'column';
+    detalle.style.gap = '4px';
+  }
+  setEl('tagDiaPagos', 'Canales de venta');
+}
+
+// ── Override cargarDiario para guardar cache y usar nuevas fechas ──
+const _cargarDiarioOriginal = cargarDiario;
+async function cargarDiario(fecha) {
+  const fin = getFechaFin() || fecha;
+  const ini = getFechaIni() || fecha;
+  const esRango = ini !== fin;
+
+  showLoader(true, 'Cargando ventas...');
+  try {
+    if (esRango) {
+      // Rango custom — usar historial para KPIs
+      const [dataHist, dataDia] = await Promise.all([
+        apiGet('ventasHistorico', { fechaIni: ini, fechaFin: fin }),
+        apiGet('ventasDia', { fecha: fin, ayer: getAyer(fin) }),
+      ]);
+      if (!dataHist || !dataDia) return;
+      dataDiario = dataDia;
+
+      const tot  = dataHist.total;
+      const dias = dataHist.dias.length;
+      const promDia = dias > 0 ? tot.ventas / dias : 0;
+
+      setEl('kDiaVentas',    fmtUSD(tot.ventas));
+      setEl('kDiaVentasSub', ini + ' → ' + fin + ' (' + dias + 'd)');
+      setEl('kDiaTrans',     tot.trans.toLocaleString());
+      setEl('kDiaTransSub',  Math.round(tot.trans/Math.max(1,dias)) + '/día promedio');
+      setEl('kDiaTicket',    fmtUSD(tot.ticket));
+      setEl('kDiaTicketSub', 'ticket medio del período');
+
+      ['kDiaDelta','kDiaTransDelta','kDiaTicketDelta'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.textContent = '— rango ' + dias + 'd'; el.className = 'kpi-delta d-neu'; }
+      });
+
+      // Rango: gráfico de evolución histórica, horas del último día
+      renderChartEvoluccionHistorico(dataHist.dias);
+      // Cambiar tab activo a "Semana" para reflejar que es un rango
+      document.querySelectorAll('.card-header .period-tab').forEach(b => b.classList.remove('active'));
+      const tabSemana = document.querySelector('.card-header .period-tab:nth-child(2)');
+      if (tabSemana) tabSemana.classList.add('active');
+      // Horas del último día del rango
+      renderChartHoras(dataDia.sucursales?.[0]?.porHora||{}, dataDia.sucursales?.[0]?.porHoraAyer||{});
+      renderChartPagosConFiltro(dataDia, currentCanalFilter);
+      setEl('tagDiaHoras', 'Último día: ' + formatFechaDisplay(fin));
+      cargarBowlsDia(fin);
+      document.getElementById('insightDiario').style.display = 'none';
+
+    } else {
+      // Un solo día
+      const ayer = getMismoDiaSemAnt(fin); // mismo día semana anterior
+      const data = await apiGet('ventasDia', { fecha: fin, ayer });
+      if (!data) return;
+      dataDiario = data;
+
+      const tot  = data.total;
+      const vHoy = tot.dia.ventas, vAyer = tot.ayer.ventas;
+      const tHoy = tot.dia.trans,  tAyer = tot.ayer.trans;
+      const tkHoy = tot.ticket,    tkAyer = tot.ticketAyer;
+      const pctV  = vAyer>0 ? (vHoy-vAyer)/vAyer*100 : null;
+      const pctT  = tAyer>0 ? (tHoy-tAyer)/tAyer*100 : null;
+      const pctTk = tkAyer>0 ? (tkHoy-tkAyer)/tkAyer*100 : null;
+
+      setEl('kDiaVentas',    fmtUSD(vHoy));
+      setEl('kDiaVentasSub', 'vs sem. ant. ' + fmtUSD(vAyer));
+      setEl('kDiaTrans',     tHoy.toLocaleString());
+      setEl('kDiaTransSub',  'vs sem. ant. ' + tAyer);
+      setEl('kDiaTicket',    fmtUSD(tkHoy));
+      setEl('kDiaTicketSub', 'vs sem. ant. ' + fmtUSD(tkAyer));
+
+      const setDelta = (id, pct) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const _vsL = 'vs sem. ant.';
+      el.textContent = pct!==null ? deltaArrow(pct)+fmtPct(pct)+' '+_vsL : '— primer día';
+        el.className   = 'kpi-delta ' + (pct!==null ? deltaClass(pct) : 'd-neu');
+      };
+      setDelta('kDiaDelta', pctV); setDelta('kDiaTransDelta', pctT); setDelta('kDiaTicketDelta', pctTk);
+
+      // Labels dinámicos según fecha seleccionada
+      const _esHoyLabel  = fin === todayStr();
+      const _semAntFecha  = getMismoDiaSemAnt(fin);
+      window._labelDia   = _esHoyLabel ? 'Hoy' : formatFechaDisplay(fin);
+      window._labelAyer  = 'Sem. ant. (' + formatFechaDisplay(_semAntFecha) + ')';
+      cargarBowlsDia(fin);
+      renderChartEvoluccion(data, currentDiarioView);
+      renderChartHoras(data.sucursales?.[0]?.porHora||{}, data.sucursales?.[0]?.porHoraAyer||{});
+      renderChartPagosConFiltro(data, currentCanalFilter);
+      const _esHoy = fin === todayStr();
+      setEl('tagDiaHoras', formatFechaDisplay(fin));
+      const _tH = document.getElementById('tituloHoras');
+      if (_tH) _tH.textContent = formatFechaDisplay(fin) + ' vs ' + formatFechaDisplay(_semAntFecha);
+
+      if (pctV !== null) {
+        setEl('insightDiarioTxt',
+          `Ventas ${Math.abs(pctV).toFixed(1)}% ${pctV>=0?'por encima':'por debajo'} de ayer. ` +
+          `${tHoy} transacciones · ticket ${fmtUSD(tkHoy)}.`
+        );
+        document.getElementById('insightDiario').style.display = 'block';
+      }
+    }
+  } catch(e) { console.error('cargarDiario:', e); }
+  finally { showLoader(false); }
+}
+
+async function renderChartEvoluccionHistorico(dias) {
+  destroyChart('chartDiaEvoluccion');
+  const ctx = document.getElementById('chartDiaEvoluccion')?.getContext('2d');
+  if (!ctx || !dias.length) return;
+
+  // Cargar mismo período del mes anterior para comparar
+  let diasAnt = [];
+  try {
+    const ini = dias[0].fecha;
+    const fin = dias[dias.length-1].fecha;
+    // Restar un mes a cada fecha
+    const shiftMes = f => {
+      const d = new Date(f+'T12:00:00');
+      d.setMonth(d.getMonth()-1);
+      return d.getFullYear()+'-'+padDate(d.getMonth()+1)+'-'+padDate(d.getDate());
+    };
+    const antIni = shiftMes(ini);
+    const antFin = shiftMes(fin);
+    const dataAnt = await apiGet('ventasHistorico', { fechaIni: antIni, fechaFin: antFin });
+    if (dataAnt?.dias) diasAnt = dataAnt.dias;
+  } catch(e) {}
+
+  charts.chartDiaEvoluccion = new Chart(ctx, {
+    type: 'line',
+    data:{
+      labels: dias.map((d,i) => d.fecha.substring(5)),
+      datasets:[
+        {
+          label: 'Este período',
+          data: dias.map(d=>d.ventas),
+          borderColor: OA.purple, borderWidth:2.5,
+          backgroundColor: OA.purple+'15',
+          fill: true, pointRadius:3, pointBackgroundColor:OA.purple,
+          tension:.3
+        },
+        ...(diasAnt.length ? [{
+          label: 'Mes anterior',
+          data: diasAnt.map(d=>d.ventas),
+          borderColor: OA.granola, borderWidth:1.5,
+          borderDash: [5,4], backgroundColor: 'transparent',
+          fill: false, pointRadius:2, pointBackgroundColor:OA.granola,
+          tension:.3
+        }] : [])
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{ labels:{ boxWidth:12, font:{size:9} } },
+        datalabels:{ display:false }
+      },
+      scales:{
+        x:{ grid:{color:'rgba(74,31,96,.06)'}, ticks:{color:OA.muted,font:{size:8},maxRotation:0} },
+        y:{ grid:{color:'rgba(74,31,96,.06)'}, ticks:{color:OA.muted,font:{size:9},callback:v=>fmtK(v)} }
+      }
+    }
+  });
+}
+
+
+
+// ── PERÍODO SELECT ───────────────────────────────────────────
+function setPeriodFromSelect(val) {
+  const today = new Date();
+  const fmt = dt => dt.getFullYear()+'-'+padDate(dt.getMonth()+1)+'-'+padDate(dt.getDate());
+  const customRow = document.getElementById('customDateRow');
+
+  if (val === 'custom') {
+    customRow.style.display = 'flex';
+    return; // Esperar que el usuario elija fechas y haga click en refresh
+  }
+  customRow.style.display = 'none';
+
+  let ini, fin;
+  if (val === 'hoy') {
+    ini = fin = fmt(today);
+  } else if (val === 'ayer') {
+    const y = new Date(today); y.setDate(today.getDate()-1);
+    ini = fin = fmt(y);
+  } else if (val === 'semana') {
+    const lun = new Date(today); lun.setDate(today.getDate()-((today.getDay()||7)-1));
+    ini = fmt(lun); fin = fmt(today);
+  } else if (val === 'semanaAnt') {
+    const lun = new Date(today); lun.setDate(today.getDate()-((today.getDay()||7)-1)-7);
+    const dom = new Date(lun); dom.setDate(lun.getDate()+6);
+    ini = fmt(lun); fin = fmt(dom);
+  } else if (val === 'mes') {
+    ini = today.getFullYear()+'-'+padDate(today.getMonth()+1)+'-01';
+    fin = fmt(today);
+  } else if (val === 'mesAnt') {
+    const d = new Date(today.getFullYear(), today.getMonth(), 0);
+    const d1 = new Date(today.getFullYear(), today.getMonth()-1, 1);
+    ini = fmt(d1); fin = fmt(d);
+  }
+
+  if (ini) document.getElementById('fechaIniInput').value = ini;
+  if (fin) document.getElementById('fechaFinInput').value  = fin;
+  // Pequeño delay para asegurar que el DOM actualizó los inputs
+  setTimeout(recargar, 50);
+}
+
+// ── CONFIG MODAL ─────────────────────────────────────────────
+function openConfigModal() {
+  // Crear modal si no existe
+  if (!document.getElementById('configModal')) {
+    const modal = document.createElement('div');
+    modal.id = 'configModal';
+    modal.className = 'modal-bg';
+    modal.innerHTML = `
+      <div class="modal-box" style="max-width:520px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px">
+          <div>
+            <div class="modal-title" style="display:flex;align-items:center;gap:8px">
+              <i class="ph ph-gear" style="color:var(--purple)"></i> Configuración
+            </div>
+            <div class="modal-sub">Ajustes del dashboard · Oakberry Panamá</div>
+          </div>
+          <button onclick="document.getElementById('configModal').classList.remove('open')" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--muted)">✕</button>
+        </div>
+
+        <!-- Logo -->
+        <div style="margin-bottom:18px;padding:14px;background:var(--offwhite);border-radius:12px">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:6px">
+            <i class="ph ph-image"></i> Logo de la Tienda
+          </div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <div style="width:80px;height:40px;background:var(--purple);border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden">
+              <img id="configLogoPreview" src="" style="width:100%;height:100%;object-fit:contain;display:none">
+              <i class="ph ph-image" style="color:rgba(255,255,255,.4);font-size:18px" id="configLogoPlaceholder"></i>
+            </div>
+            <div>
+              <label style="font-family:var(--font);font-size:11px;font-weight:600;padding:6px 14px;border-radius:8px;border:1px solid var(--border2);cursor:pointer;background:white">
+                <i class="ph ph-upload-simple"></i> Subir logo
+                <input type="file" accept="image/*" onchange="previewLogo(this)" style="display:none">
+              </label>
+              <div style="font-size:9.5px;color:var(--muted);margin-top:4px">PNG o SVG recomendado</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Usuarios -->
+        <div style="margin-bottom:18px;padding:14px;background:var(--offwhite);border-radius:12px">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:6px">
+            <i class="ph ph-users"></i> Usuarios
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+            <div>
+              <label class="field-label">Usuario</label>
+              <input class="field-input" id="newUserName" placeholder="nombre.usuario" style="margin-bottom:0">
+            </div>
+            <div>
+              <label class="field-label">Contraseña</label>
+              <input class="field-input" id="newUserPass" type="password" placeholder="••••••••" style="margin-bottom:0">
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+            <div>
+              <label class="field-label">Nombre completo</label>
+              <input class="field-input" id="newUserNombre" placeholder="Nombre Apellido" style="margin-bottom:0">
+            </div>
+            <div>
+              <label class="field-label">Rol</label>
+              <select class="field-select" id="newUserRol" style="margin-bottom:0">
+                <option value="viewer">Viewer</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn-primary" onclick="guardarNuevoUsuario()" style="display:flex;align-items:center;gap:5px;font-size:11px">
+            <i class="ph ph-user-plus"></i> Agregar usuario
+          </button>
+          <div id="configUserMsg" style="margin-top:8px;font-size:11px;display:none"></div>
+        </div>
+
+        <!-- Sucursales -->
+        <div style="padding:14px;background:var(--offwhite);border-radius:12px">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:6px">
+            <i class="ph ph-map-pin"></i> Sucursales activas
+          </div>
+          <div style="font-size:12px;color:var(--text);display:flex;align-items:center;gap:8px;padding:8px 10px;background:white;border-radius:8px">
+            <span style="width:8px;height:8px;border-radius:50%;background:var(--matcha);flex-shrink:0"></span>
+            San Francisco · La Peatonal
+            <span style="margin-left:auto;font-size:10px;color:var(--muted)">Activa</span>
+          </div>
+          <div style="font-size:10px;color:var(--muted);margin-top:8px">
+            Para agregar sucursales, contactá al administrador del sistema.
+          </div>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+  }
+  document.getElementById('configModal').classList.add('open');
+}
+
+function previewLogo(input) {
+  if (!input.files?.[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const preview = document.getElementById('configLogoPreview');
+    const placeholder = document.getElementById('configLogoPlaceholder');
+    if (preview) { preview.src = e.target.result; preview.style.display = 'block'; }
+    if (placeholder) placeholder.style.display = 'none';
+    // Guardar en localStorage para persistir
+    try { localStorage.setItem('oa_logo', e.target.result); } catch(err) {}
+    // Actualizar logo en sidebar
+    updateSidebarLogo(e.target.result);
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+function updateSidebarLogo(src) {
+  const logoImg = document.querySelector('.sidebar-logo img');
+  if (logoImg) logoImg.src = src;
+}
+
+async function guardarNuevoUsuario() {
+  const usuario = document.getElementById('newUserName').value.trim();
+  const pass    = document.getElementById('newUserPass').value.trim();
+  const nombre  = document.getElementById('newUserNombre').value.trim();
+  const rol     = document.getElementById('newUserRol').value;
+  const msg     = document.getElementById('configUserMsg');
+
+  if (!usuario || !pass || !nombre) {
+    msg.textContent = '❌ Completá todos los campos';
+    msg.style.color = 'var(--strawberry)';
+    msg.style.display = 'block';
+    return;
+  }
+
+  try {
+    const data = await apiGet('addUser', { usuario, password:pass, nombre, rol });
+    if (data?.ok) {
+      msg.textContent = '✅ Usuario creado correctamente';
+      msg.style.color = '#2a9d8f';
+      document.getElementById('newUserName').value = '';
+      document.getElementById('newUserPass').value = '';
+      document.getElementById('newUserNombre').value = '';
+    } else {
+      msg.textContent = '❌ ' + (data?.message || 'Error');
+      msg.style.color = 'var(--strawberry)';
+    }
+  } catch(e) {
+    msg.textContent = '❌ Error: ' + e.message;
+    msg.style.color = 'var(--strawberry)';
+  }
+  msg.style.display = 'block';
+}
+
+// ── EXPORTAR INFORME ─────────────────────────────────────────
+async function descargarInforme() {
+  const active = document.querySelector('.nav-item.active')?.dataset.section || 'diario';
+  const ini = document.getElementById('fechaIniInput')?.value || todayStr();
+  const fin = document.getElementById('fechaFinInput')?.value || todayStr();
+
+  showLoader(true, 'Generando informe...');
+  try {
+    const wb = XLSX.utils.book_new();
+
+    if (active === 'diario' || active === 'mensual' || active === 'historico') {
+      const data = await apiGet('ventasHistorico', { fechaIni: ini, fechaFin: fin });
+      if (data?.dias?.length) {
+        const header = ['Fecha','Día','Ventas ($)','Transacciones','Ticket ($)'];
+        const rows = data.dias.map(d=>[d.fecha,d.dia,d.ventas.toFixed(2),d.trans,d.ticket.toFixed(2)]);
+        rows.push(['TOTAL','',data.total.ventas.toFixed(2),data.total.trans,data.total.ticket.toFixed(2)]);
+        const ws = XLSX.utils.aoa_to_sheet([header,...rows]);
+        ws['!cols'] = [{wch:12},{wch:8},{wch:14},{wch:14},{wch:12}];
+        XLSX.utils.book_append_sheet(wb, ws, 'Ventas Diarias');
+      }
+    }
+
+    if (active === 'bowls') {
+      const data = await apiGet('bowls', { fechaIni: ini, fechaFin: fin });
+      if (data?.bowls) {
+        const b = data.bowls;
+        const allItems = [...b.items.map(i=>({...i,tipo:'Bowl'})), ...b.signature.map(i=>({...i,tipo:'Signature'}))];
+        const total = b.total + b.totalSig;
+        const ws = XLSX.utils.aoa_to_sheet([
+          ['Producto','Tipo','Unidades','% del total'],
+          ...allItems.map(i=>[i.label,i.tipo,i.qty,total>0?(i.qty/total*100).toFixed(1)+'%':'—']),
+          ['TOTAL','',total,'100%'],
+        ]);
+        XLSX.utils.book_append_sheet(wb, ws, 'Bowls');
+      }
+    }
+
+    if (active === 'canales') {
+      const data = await apiGet('canales', { fechaIni: ini, fechaFin: fin });
+      if (data?.canales) {
+        const c = data.canales;
+        const ws = XLSX.utils.aoa_to_sheet([
+          ['Canal','Monto ($)','%'],
+          ['Tarjeta', c.tarjeta?.toFixed(2)||0, c.pct?.tarjeta+'%'],
+          ['Efectivo', c.efectivo?.toFixed(2)||0, c.pct?.efectivo+'%'],
+          ['Yappy/SINPE', c.sinpe?.toFixed(2)||0, c.pct?.sinpe+'%'],
+          ['Otros', c.otros?.toFixed(2)||0, c.pct?.otros+'%'],
+          ['TOTAL', c.total?.toFixed(2)||0, '100%'],
+        ]);
+        XLSX.utils.book_append_sheet(wb, ws, 'Canales');
+      }
+    }
+
+    if (wb.SheetNames.length === 0) {
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['Sin datos para exportar']]), 'Informe');
+    }
+
+    const fname = 'Oakberry_Panama_' + active + '_' + ini + '_' + fin + '.xlsx';
+    XLSX.writeFile(wb, fname);
+
+  } catch(e) {
+    console.error('descargarInforme:', e);
+    alert('Error al exportar: ' + e.message);
+  } finally {
+    showLoader(false);
+  }
+}
+
+// ── Inicializar fechas del topbar ──
+function initTopbarFechas() {
+  const today = todayStr();
+  document.getElementById('fechaIniInput').value = today;
+  document.getElementById('fechaFinInput').value = today;
+  // Sincronizar el select de período con "Hoy"
+  const sel = document.getElementById('periodoSelect');
+  if (sel) sel.value = 'hoy';
+  // También inicializar historial
+  initHistFechas();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  const s = getSession();
+  if (s && s.token && Date.now() < (s.expiry||0)) {
+    session = s;
+    mostrarApp();
+  }
+  // fechaInput removed — initTopbarFechas() handles dates
+});
+</script>
+</body>
+</html>
