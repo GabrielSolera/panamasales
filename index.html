@@ -78,6 +78,7 @@ canvas{color:var(--muted);}
   background:var(--purple);
   display:flex;flex-direction:column;
   overflow:hidden;position:relative;z-index:50;
+  transition:transform .25s ease;
 }
 .sidebar::after{
   content:'';position:absolute;bottom:-80px;right:-60px;
@@ -281,10 +282,11 @@ canvas{color:var(--muted);}
   :root{--sidebar-w:260px;}
   .sidebar{
     position:fixed;left:0;top:0;bottom:0;z-index:200;
-    transform:translateX(-100%);transition:transform .25s ease;
+    transform:translateX(-100%);
     box-shadow:4px 0 24px rgba(0,0,0,.3);
+    width:260px !important;
   }
-  .sidebar.open{transform:translateX(0);}
+  .sidebar.open{transform:translateX(0) !important;}
 
   /* Overlay oscuro detrás del sidebar */
   .sidebar-overlay{
@@ -300,7 +302,7 @@ canvas{color:var(--muted);}
   .btn-hamburger{
     width:36px;height:36px;border-radius:10px;
     background:var(--purple);border:none;cursor:pointer;
-    display:flex;align-items:center;justify-content:center;
+    display:flex !important;align-items:center;justify-content:center;
     color:#fff;font-size:18px;flex-shrink:0;
   }
   .ctrl-select{font-size:10px;padding:4px 8px;}
@@ -321,6 +323,22 @@ canvas{color:var(--muted);}
   .kpi-grid{grid-template-columns:1fr 1fr;}
   .kpi-grid-3{grid-template-columns:1fr;}
   .topbar-controls .ctrl-sep{display:none;}
+}
+
+/* Desktop: hamburger oculto, sidebar siempre visible */
+@media(min-width:901px){
+  .btn-hamburger{ display:none !important; }
+  .sidebar-overlay{ display:none !important; }
+  .sidebar{
+    position:relative !important;
+    transform:none !important;
+    width:var(--sidebar-w) !important;
+  }
+}
+
+/* Mobile: hamburger visible por defecto */
+@media(max-width:900px){
+  .btn-hamburger{ display:flex !important; }
 }
 </style>
 <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
